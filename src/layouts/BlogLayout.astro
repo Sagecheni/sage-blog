@@ -10,11 +10,11 @@ const { frontmatter, readTime, headings } = Astro.props;
   title={frontmatter.title}
   description={frontmatter.description}
   author={frontmatter.author}
-  url={`https://blog.sagec.fun/${frontmatter.slug}`}
+  url={`https://blog.sagec.fun/blog/${frontmatter.slug}`}
   pubDate={frontmatter.date}
 >
   <ProgressBar client:idle />
-  <div class="relative mx-auto max-w-3xl px-4 lg:px-0">
+  <div class="relative mx-auto max-w-5xl px-4 lg:px-0">
     {/* Left Sidebar (TOC) - Absolute positioned on large screens to avoid shifting content */}
     <aside class="absolute right-full top-0 mr-12 hidden xl:block w-48 h-full">
       <div class="sticky top-24">

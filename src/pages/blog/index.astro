@@ -1,0 +1,394 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import type { BlogType } from "../../content.config";
+
+
+const blogs: BlogType[] = await getCollection("blogs");
+const allBlogs = blogs
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// --- Data Preparation ---
+
+// 1. Tag Counts
+const tagCounts = new Map<string, number>();
+allBlogs.forEach((blog) => {
+  blog.data.tags.forEach((tag) => {
+    tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+  });
+});
+const sortedTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]); // Sort by count desc
+
+// 2. Archive Tree (Year -> Month)
+type ArchiveMonth = { ym: string; name: string; count: number; date: Date };
+type ArchiveYear = { year: string; count: number; months: ArchiveMonth[] };
+
+const archiveMap = new Map<string, ArchiveYear>();
+
+allBlogs.forEach((blog) => {
+  const y = blog.data.date.getFullYear().toString();
+  const ym = monthKey(blog.data.date);
+  
+  if (!archiveMap.has(y)) {
+    archiveMap.set(y, { year: y, count: 0, months: [] });
+  }
+  const yearEntry = archiveMap.get(y)!;
+  yearEntry.count++;
+
+  // Find or create month entry
+  let monthEntry = yearEntry.months.find((m) => m.ym === ym);
+  if (!monthEntry) {
+    const date = new Date(blog.data.date);
+    const name = date.toLocaleString("default", { month: "long" });
+    monthEntry = { ym, name, count: 0, date };
+    yearEntry.months.push(monthEntry);
+  }
+  monthEntry.count++;
+});
+
+// Sort years desc, months desc within year
+const archiveTree = [...archiveMap.values()]
+  .sort((a, b) => parseInt(b.year) - parseInt(a.year))
+  .map((y) => {
+    y.months.sort((a, b) => b.date.getTime() - a.date.getTime());
+    return y;
+  });
+
+function getMonthName(ym: string) {
+  const [y, m] = ym.split("-");
+  const date = new Date(parseInt(y), parseInt(m) - 1);
+  return date.toLocaleString("default", { month: "long", year: "numeric" });
+}
+
+function monthKey(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
+
+function removeMarkdown(markdown: string) {
+  if (!markdown) return "";
+  return markdown
+    .replace(/!\[.*?\]\(.*?\)/g, "")
+    .replace(/\[([^\]]+)\]\(.*?\)/g, "$1")
+    .replace(/#{1,6}\s/g, "")
+    .replace(/(\*|_){1,3}([^*_]+)(\*|_){1,3}/g, "$2")
+    .replace(/`{1,3}[^`]*`{1,3}/g, "")
+    .replace(/^\s*[-+*]\s/gm, "")
+    .replace(/^\s*>\s/gm, "")
+    .replace(/\n+/g, " ")
+    .trim();
+}
+
+---
+
+<BaseLayout
+  title="Blog"
+  description="All blog posts"
+  author="Rahul"
+  url="https://blog.sagec.fun/blog"
+>
+  <div class="mx-auto w-full max-w-[1600px] px-4 md:px-8 py-8">
+    <div class="grid grid-cols-1 gap-12 lg:grid-cols-4">
+      {/* Left Sidebar: Filters */}
+      <aside class="order-2 lg:order-1 lg:col-span-1">
+        <div class="sticky top-24 space-y-8">
+          
+          {/* Tags Section */}
+          <div>
+            <h3 class="mb-4 text-xl font-bold uppercase tracking-wider text-accent">
+              Tags
+            </h3>
+            <div class="flex flex-wrap gap-x-4 gap-y-2">
+              <button
+                class="tag-filter text-left transition-colors flex items-center gap-1 group"
+                data-tag="all"
+              >
+                <span class="group-hover:underline underline-offset-4 decoration-accent/50">All Tags</span>
+                <span class="text-xs text-muted-foreground/60 group-hover:text-accent">({allBlogs.length})</span>
+              </button>
+              {
+                sortedTags.map(([tag, count]) => (
+                  <button
+                    class="tag-filter text-left transition-colors flex items-center gap-1 group"
+                    data-tag={tag}
+                  >
+                   <span class="capitalize group-hover:underline underline-offset-4 decoration-accent/50">{tag}</span>
+                   <span class="text-xs text-muted-foreground/60 group-hover:text-accent">({count})</span>
+                  </button>
+                ))
+              }
+            </div>
+          </div>
+
+          {/* Archive Section */}
+          <div>
+            <h3 class="mb-4 text-xl font-bold uppercase tracking-wider text-accent">
+              Archive
+            </h3>
+            <div class="flex flex-col gap-1">
+              <button
+                class="date-filter text-left hover:text-accent active transition-colors font-semibold"
+                data-date="all"
+              >
+                All Posts
+              </button>
+              
+              <div class="space-y-4 mt-2">
+                {archiveTree.map((year) => (
+                  <div class="archive-year-group" data-year={year.year}>
+                    <div class="flex items-center justify-between w-full group">
+                        <button
+                          class="year-toggle p-1 hover:text-accent text-muted-foreground transition-colors"
+                          aria-label="Toggle year"
+                        >
+                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down transition-transform duration-200" style="transform: rotate(-90deg)"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <button 
+                          class="date-filter text-left hover:text-accent font-bold flex-1 flex justify-between ml-1 bg-transparent"
+                          data-date={year.year}
+                        >
+                          <span>{year.year}</span>
+                          <span class="text-muted-foreground group-hover:text-accent">({year.count})</span>
+                        </button>
+                    </div>
+                    <div class="months-list hidden pl-8 mt-1 border-l-2 border-border/30 space-y-1 transition-all">
+                      {year.months.map((month) => (
+                        <button
+                          class="date-filter text-left hover:text-accent text-sm w-full flex justify-between group py-0.5"
+                          data-date={month.ym}
+                        >
+                          <span>{month.name}</span>
+                          <span class="text-muted-foreground group-hover:text-accent text-xs">({month.count})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      {/* Center: Blog Posts */}
+      <main class="order-1 lg:order-2 lg:col-span-3">
+        <div class="flex items-center justify-between mb-8 border-b border-border pb-4">
+            <h2 class="text-2xl font-bold uppercase tracking-wider">
+            Articles
+            </h2>
+            <div id="filter-status" class="hidden text-sm text-muted-foreground">
+                Showing <span id="showing-count" class="font-bold text-foreground">0</span> posts
+            </div>
+        </div>
+
+        <div id="posts-container" class="space-y-8 min-h-[50vh]">
+          {
+            allBlogs.map((blog) => {
+              const ym = monthKey(blog.data.date);
+              const cleanBody = removeMarkdown(blog.body ?? "");
+              const snippet = cleanBody.slice(0, 150) + (cleanBody.length > 150 ? "..." : "");
+              
+              return (
+                <div
+                  class="blog-post-item border-b border-border/50 py-8 first:pt-0"
+                  data-tags={JSON.stringify(blog.data.tags)}
+                  data-date={ym}
+                >
+                  <a href={`/blog/${blog.data.slug}`} class="group grid grid-cols-1 gap-2 md:grid-cols-4 md:gap-8">
+                    {/* Date Column */}
+                    <div class="md:col-span-1">
+                      <time datetime={blog.data.date.toISOString()} class="text-sm font-mono text-muted-foreground">
+                         {blog.data.date.toLocaleDateString("en-GB", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </time>
+                    </div>
+
+                    {/* Content Column */}
+                    <div class="md:col-span-3">
+                      <h3 class="text-xl font-bold font-heading text-foreground group-hover:text-accent transition-colors">
+                        {blog.data.title}
+                      </h3>
+                      
+                       <p class="mt-2 text-muted-foreground line-clamp-2">
+                         {snippet || blog.data.description}
+                       </p>
+                      
+                       <div class="mt-4 flex flex-wrap gap-2">
+                        {blog.data.tags.map((tag) => (
+                          <span class="text-xs font-mono text-muted-foreground/80 bg-secondary/50 px-2 py-1 rounded-sm">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              );
+            })
+          }
+           <div id="no-posts" class="hidden text-center py-20 text-muted-foreground bg-secondary/10 rounded-lg">
+             <p class="text-lg">No posts found matching current filters.</p>
+             <button id="clear-filters" class="mt-4 text-accent hover:underline">Clear all filters</button>
+          </div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  let currentTag = "all";
+  let currentDate = "all";
+
+  const tagButtons = document.querySelectorAll(".tag-filter");
+  const dateButtons = document.querySelectorAll(".date-filter");
+  const toggleButtons = document.querySelectorAll(".year-toggle");
+  const posts = document.querySelectorAll(".blog-post-item");
+  const noPostsMsg = document.getElementById("no-posts");
+  const showingCountEl = document.getElementById("showing-count");
+  const filterStatusEl = document.getElementById("filter-status");
+  const clearFiltersBtn = document.getElementById("clear-filters");
+
+  function filterPosts() {
+    let visibleCount = 0;
+    posts.forEach((post) => {
+      const el = post as HTMLElement;
+      const postTags = JSON.parse(el.dataset.tags || "[]");
+      const postDate = el.dataset.date || ""; // YYYY-MM
+
+      const tagMatch = currentTag === "all" || postTags.includes(currentTag);
+      
+      // Date Logic:
+      let dateMatch = false;
+      if (currentDate === "all") {
+          dateMatch = true;
+      } else if (currentDate.length === 4) { // Year only
+          dateMatch = postDate.startsWith(currentDate);
+      } else { // YYYY-MM
+          dateMatch = postDate === currentDate;
+      }
+
+      if (tagMatch && dateMatch) {
+        el.style.display = "block";
+        visibleCount++;
+      } else {
+        el.style.display = "none";
+      }
+    });
+
+    if (noPostsMsg) {
+        noPostsMsg.style.display = visibleCount === 0 ? "block" : "none";
+    }
+    
+    if (showingCountEl) showingCountEl.textContent = visibleCount.toString();
+    if (filterStatusEl) filterStatusEl.classList.remove("hidden");
+  }
+
+  function setActive(buttons: NodeListOf<Element>, activeBtn: HTMLElement) {
+      buttons.forEach(b => {
+          b.classList.remove("text-accent", "font-bold");
+          b.classList.add("text-muted-foreground");
+      });
+      activeBtn.classList.add("text-accent", "font-bold");
+      activeBtn.classList.remove("text-muted-foreground");
+  }
+
+  // Toggling Logic
+  toggleButtons.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+          e.stopPropagation(); // Prevent filter click
+          const group = btn.closest(".archive-year-group");
+          const list = group?.querySelector(".months-list");
+          const icon = btn.querySelector("svg");
+          
+          if(list && icon) {
+              list.classList.toggle("hidden");
+              // Rotate icon
+              if (list.classList.contains("hidden")) {
+                  icon.style.transform = "rotate(-90deg)"; // Point right
+              } else {
+                  icon.style.transform = "rotate(0deg)"; // Point down
+              }
+          }
+      });
+  });
+
+  tagButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLElement; // Use currentTarget for button with children
+      currentTag = target.dataset.tag || "all";
+      
+      // Visual update
+      tagButtons.forEach(b => {
+        b.classList.remove("font-bold", "text-accent");
+        b.classList.add("text-muted-foreground"); 
+      });
+      target.classList.add("font-bold", "text-accent");
+      target.classList.remove("text-muted-foreground");
+
+      filterPosts();
+    });
+  });
+
+  dateButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLElement;
+      currentDate = target.dataset.date || "all";
+      const year = currentDate.split("-")[0]; // YYYY or YYYY-MM -> YYYY
+
+      // Expand the year group if it's a specific date
+      if (currentDate !== "all") {
+          const group = document.querySelector(`.archive-year-group[data-year="${year}"]`);
+          const list = group?.querySelector(".months-list");
+          const icon = group?.querySelector(".year-toggle svg");
+          if (list && list.classList.contains("hidden")) {
+               list.classList.remove("hidden");
+               if(icon) (icon as HTMLElement).style.transform = "rotate(0deg)";
+          }
+      }
+
+      dateButtons.forEach(b => {
+        b.classList.remove("font-bold", "text-accent");
+      });
+      target.classList.add("font-bold", "text-accent");
+
+      filterPosts();
+    });
+  });
+  
+  clearFiltersBtn?.addEventListener("click", () => {
+       (document.querySelector('[data-tag="all"]') as HTMLElement)?.click();
+       (document.querySelector('[data-date="all"]') as HTMLElement)?.click();
+  });
+
+  // Init
+  const allTagBtn = document.querySelector('[data-tag="all"]');
+  if(allTagBtn) {
+      allTagBtn.classList.remove("text-muted-foreground");
+      allTagBtn.classList.add("font-bold", "text-accent");
+  } else {
+      // Ensure others have default class if not set in HTML?
+      // Actually standard tags in loop will render with base classes.
+      // I should ensure they start with text-muted-foreground if not active.
+      // I'll add text-muted-foreground to the HTML generation in a fix-up if needed, 
+      // OR just rely on the fact that I'm adding it here on init?
+      // Better to add it in init loop.
+  }
+  
+  // Set initial state for all tag buttons that are NOT active
+  tagButtons.forEach(btn => {
+      if(btn !== allTagBtn) btn.classList.add("text-muted-foreground");
+  });
+
+  const allDateBtn = document.querySelector('[data-date="all"]');
+  if(allDateBtn) allDateBtn.classList.add("font-bold", "text-accent");
+  
+  filterPosts();
+
+</script>

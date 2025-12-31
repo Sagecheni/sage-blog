@@ -1,8 +1,8 @@
 ---
-slug: "Attention1"
+slug: "Attention2"
 title: "注意力机制解析与实现"
 description: "注意力机制解析与实现"
-date: 2025-05-31
+date: 2025-11-31
 author: "Sage"
 tags: ["AI", "LLM", "Attention"]
 featured: true

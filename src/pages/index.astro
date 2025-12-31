@@ -1,14 +1,15 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Introduction from "../components/Introduction.astro";
-import Featured from "../components/Featured.astro";
-import Newsletter from "../components/Newsletter.astro";
+import Recents from "../components/Recents.astro";
+import Socials from "../components/Socials.astro";
+
 ---
 
 <BaseLayout
-  title="Ryze"
-  description="A minimalist Astro starter for personal blogs."
-  author="Rahul"
+  title="Sage's Blog"
+  description="SageChen's Blog"
+  author="SageChen"
   url="https://blog.sagec.fun"
 >
   <div class="center">
@@ -17,11 +18,11 @@ import Newsletter from "../components/Newsletter.astro";
     </section>
     <hr />
     <section>
-      <Featured />
+      <Recents />
     </section>
     <hr />
     <section>
-      <Newsletter />
+      <Socials />
     </section>
   </div>
 </BaseLayout>

@@ -12,15 +12,20 @@ const blogs_ = blogs.map((blog) => {
     data: { ...blog.data, readTime: minutes },
   };
 });
-const featuredBlogs = blogs_
-  .filter((blog: BlogType) => blog.data.featured === true)
+
+// Filter posts from the last 3 months
+const threeMonthsAgo = new Date();
+threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+const recentBlogs = blogs_
+  .filter((blog: BlogType) => blog.data.date >= threeMonthsAgo)
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
 
-<h2 class="section-heading">F E A T U R E D</h2>
-<ul class="grid gap-3 py-6 md:grid-cols-2">
+<h2 class="section-heading">R E C E N T S</h2>
+<ul class="grid gap-3 py-6">
   {
-    featuredBlogs.map((blog: BlogType) => {
+    recentBlogs.map((blog: BlogType) => {
       return (
         <li>
           <FeatureCard

@@ -1,5 +1,5 @@
 ---
-const { title, date, url, tags, readTime } = Astro.props;
+const { title, date, url, tags, readTime, description } = Astro.props;
 import IconChevronRight from "../assets/icons/chevron-right.svg";
 import IconArrowRight from "../assets/icons/arrow-right.svg";
 import IconCalendarWeek from "../assets/icons/calendar-week.svg";
@@ -25,6 +25,13 @@ import IconClockHour3 from "../assets/icons/clock-hour-3.svg";
       />
     </div>
   </div>
+  {description && (
+    <div class="mx-4">
+        <p class="text-sm text-foreground opacity-70 mb-2 line-clamp-2 group-hover:text-background animation">
+            {description}
+        </p>
+    </div>
+  )}
   <div>
     <div class="mx-4 flex flex-wrap gap-6 opacity-80 group-hover:mb-0">
       <div class="flex gap-1 font-mono">
