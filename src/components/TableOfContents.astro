@@ -1,0 +1,55 @@
+---
+const { headings } = Astro.props;
+
+// 只收录 h2/h3（你也可以放开到 h4）
+const toc = (headings ?? []).filter((h: { depth: number; }) => h.depth >= 2 && h.depth <= 3);
+---
+
+{toc.length > 0 && (
+  <nav aria-label="Table of contents" class="toc">
+    <p class="toc-title">Table of Contents</p>
+    <ol class="toc-list">
+      {toc.map((h: { depth: any; slug: unknown; text: unknown; }) => (
+        <li class={`toc-item depth-${h.depth}`}>
+          <a class="toc-link" href={`#${h.slug}`} data-toc-link={h.slug}>
+            {h.text}
+          </a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}
+
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const id = entry.target.getAttribute("id");
+        if (entry.intersectionRatio > 0) {
+          const links = document.querySelectorAll(`.toc-link`);
+          links.forEach((link) => link.classList.remove("is-active"));
+
+          const activeLink = document.querySelector(`.toc-link[href="#${id}"]`);
+          if (activeLink) {
+            activeLink.classList.add("is-active");
+          }
+        }
+      });
+    },
+    { rootMargin: "0px 0px -80% 0px" } // Highlight when heading is near top
+  );
+
+  // Track all headings that are in the TOC
+  document.querySelectorAll("h2, h3").forEach((h) => {
+    observer.observe(h);
+  });
+</script>
+
+<style>
+  .toc-title { font-weight: 600; margin-bottom: .5rem; }
+  .toc-list { list-style: none; padding: 0; margin: 0; }
+  .toc-item.depth-3 { padding-left: 1rem; }
+  .toc-link { display: block; padding: .25rem 0; text-decoration: none; transition: all 0.2s; color: var(--foreground); opacity: 0.7; }
+  .toc-link:hover { opacity: 1; color: var(--accent); }
+  .toc-link.is-active { font-weight: 600; opacity: 1; color: var(--accent); }
+</style>

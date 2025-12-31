@@ -1,0 +1,32 @@
+---
+import ProgressBar from "../components/ProgressBar";
+import BaseLayout from "./BaseLayout.astro";
+import Title from "../components/Title.astro";
+import TableOfContents from "../components/TableOfContents.astro";
+const { frontmatter, readTime, headings } = Astro.props;
+---
+
+<BaseLayout
+  title={frontmatter.title}
+  description={frontmatter.description}
+  author={frontmatter.author}
+  url={`https://blog.sagec.fun/${frontmatter.slug}`}
+  pubDate={frontmatter.date}
+>
+  <ProgressBar client:idle />
+  <div class="relative mx-auto max-w-3xl px-4 lg:px-0">
+    {/* Left Sidebar (TOC) - Absolute positioned on large screens to avoid shifting content */}
+    <aside class="absolute right-full top-0 mr-12 hidden xl:block w-48 h-full">
+      <div class="sticky top-24">
+        {headings && headings.length > 0 && <TableOfContents headings={headings} />}
+      </div>
+    </aside>
+
+    <article class="pb-13">
+      <Title frontmatter={frontmatter} readTime={readTime} />
+      <section class="markdown">
+        <slot />
+      </section>
+    </article>
+  </div>
+</BaseLayout>
