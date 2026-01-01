@@ -5,8 +5,7 @@ description: "注意力机制解析与实现"
 date: 2025-05-31
 author: "Sage"
 tags: ["AI", "LLM", "Attention"]
-featured: true
-editable: true
+bibliography: public/bibs/ai.bib
 ---
 
 ![Attention Mind Map](https://sa1geblogimage-1316665129.cos.ap-beijing.myqcloud.com/img/Attention-Mind-Map.png)
