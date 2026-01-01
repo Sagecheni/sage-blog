@@ -6,14 +6,14 @@ const { page } = Astro.props;
   <a
     href={page.url.prev || "#"}
     class={`${page.url.prev ? "hover:text-accent" : "text-foreground/60 cursor-not-allowed"}`}
-    >prev</a
+    >上一页</a
   >
   <p class="font-mono text-sm opacity-90">
-    {page.currentPage} of {page.lastPage}
+    {page.currentPage} / {page.lastPage}
   </p>
   <a
     href={page.url.next || "#"}
     class={` ${page.url.next ? "hover:text-accent" : "text-foreground/60 cursor-not-allowed"}`}
-    >next</a
+    >下一页</a
   >
 </nav>

@@ -7,7 +7,7 @@ const toc = (headings ?? []).filter((h: { depth: number; }) => h.depth >= 2 && h
 
 {toc.length > 0 && (
   <nav aria-label="Table of contents" class="toc">
-    <p class="toc-title">Table of Contents</p>
+    <p class="toc-title">文章目录</p>
     <ol class="toc-list">
       {toc.map((h: { depth: any; slug: unknown; text: unknown; }) => (
         <li class={`toc-item depth-${h.depth}`}>

@@ -8,7 +8,7 @@
     class:list={[
       "navigation animation",
       Astro.url.pathname === "/" ? "text-accent" : "",
-    ]}>Home</a
+    ]}>首页</a
   >
   <span class="text-muted-foreground">/</span>
   <a
@@ -16,7 +16,7 @@
     class:list={[
       "navigation animation",
       Astro.url.pathname.startsWith("/blog") ? "text-accent" : "",
-    ]}>Blog</a
+    ]}>博客</a
   >
   <span class="text-muted-foreground">/</span>
   <a
@@ -24,6 +24,6 @@
     class:list={[
       "navigation animation",
       Astro.url.pathname.startsWith("/about") ? "text-accent" : "",
-    ]}>About</a
+    ]}>关于</a
   >
 </nav>
