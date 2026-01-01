@@ -13,6 +13,13 @@ const blogs = defineCollection({
     featured: z.boolean(),
     editable: z.boolean(),
     readTime: z.number().optional(),
+
+    // ✅ 给 rehype-citation 用
+    bibliography: z.union([z.string(), z.array(z.string())]).optional(),
+    csl: z.string().optional(),
+    lang: z.string().optional(),
+    noCite: z.array(z.string()).optional(),
+    suppressBibliography: z.boolean().optional(),
   }),
 });
 

@@ -1,5 +1,5 @@
 ---
-slug: "Attention1"
+slug: "Attention"
 title: "注意力机制解析与实现"
 description: "注意力机制解析与实现"
 date: 2025-05-31
@@ -10,6 +10,7 @@ editable: true
 ---
 
 ![Attention Mind Map](https://sa1geblogimage-1316665129.cos.ap-beijing.myqcloud.com/img/Attention-Mind-Map.png)
+
 
 ## 为什么需要注意力机制
 

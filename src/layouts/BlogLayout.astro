@@ -3,6 +3,7 @@ import ProgressBar from "../components/ProgressBar";
 import BaseLayout from "./BaseLayout.astro";
 import Title from "../components/Title.astro";
 import TableOfContents from "../components/TableOfContents.astro";
+import Mermaid from "../components/Mermaid.astro";
 const { frontmatter, readTime, headings } = Astro.props;
 ---
 
@@ -26,7 +27,21 @@ const { frontmatter, readTime, headings } = Astro.props;
       <Title frontmatter={frontmatter} readTime={readTime} />
       <section class="markdown">
         <slot />
+        <Mermaid />
       </section>
     </article>
   </div>
 </BaseLayout>
+
+<script>
+  function moveBibliography() {
+    const bib = document.querySelector('.csl-bib-body');
+    const placeholder = document.getElementById('bibliography-placeholder');
+    if (bib && placeholder) {
+      placeholder.appendChild(bib);
+    }
+  }
+
+  document.addEventListener('astro:page-load', moveBibliography);
+  document.addEventListener('DOMContentLoaded', moveBibliography);
+</script>

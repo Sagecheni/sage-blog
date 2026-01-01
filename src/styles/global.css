@@ -176,3 +176,129 @@
   animation: fade-in-up 1s ease-out 0.3s forwards;
   opacity: 0; /* consistent start state */
 }
+
+/* CALLOUTS / DIRECTIVES */
+.callout {
+    padding: 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid;
+    background-color: var(--background);
+    color: var(--foreground);
+    position: relative;
+    border: 2px solid var(--foreground);
+    box-shadow: 4px 4px 0px var(--foreground);
+}
+
+.callout-title {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    display: block;
+    text-transform: uppercase;
+    font-family: var(--font-heading);
+    letter-spacing: 0.05em;
+}
+
+.callout.note {
+    border-color: #3b82f6; /* Blue */
+    box-shadow: 4px 4px 0px #3b82f6;
+}
+.callout.note::before {
+    content: "NOTE";
+    display: block;
+    font-weight: bold;
+    font-family: var(--font-heading);
+    color: #3b82f6;
+    margin-bottom: 0.5rem;
+}
+
+.callout.tip {
+    border-color: #10b981; /* Green */
+    box-shadow: 4px 4px 0px #10b981;
+}
+.callout.tip::before {
+    content: "TIP";
+    display: block;
+    font-weight: bold;
+    font-family: var(--font-heading);
+    color: #10b981;
+    margin-bottom: 0.5rem;
+}
+
+.callout.warning {
+    border-color: #f59e0b; /* Yellow/Orange */
+    box-shadow: 4px 4px 0px #f59e0b;
+}
+.callout.warning::before {
+    content: "WARNING";
+    display: block;
+    font-weight: bold;
+    font-family: var(--font-heading);
+    color: #f59e0b;
+    margin-bottom: 0.5rem;
+}
+
+.callout.important {
+    border-color: #8b5cf6; /* Purple */
+    box-shadow: 4px 4px 0px #8b5cf6;
+}
+.callout.important::before {
+    content: "IMPORTANT";
+    display: block;
+    font-weight: bold;
+    font-family: var(--font-heading);
+    color: #8b5cf6;
+    margin-bottom: 0.5rem;
+}
+
+.callout.caution {
+    border-color: #ef4444; /* Red */
+    box-shadow: 4px 4px 0px #ef4444;
+}
+.callout.caution::before {
+    content: "CAUTION";
+    display: block;
+    font-weight: bold;
+    font-family: var(--font-heading);
+    color: #ef4444;
+    margin-bottom: 0.5rem;
+}
+
+/* Citations Bubble (Custom Directive :citen) */
+.citation {
+    color: var(--accent);
+    vertical-align: super;
+    font-size: 0.75em;
+    text-decoration: none;
+    margin: 0 0.1rem;
+    font-family: var(--font-mono);
+    line-height: 0; /* Prevents messing up line height */
+    cursor: pointer;
+    font-weight: bold;
+}
+.citation:hover {
+    text-decoration: underline;
+}
+
+/* Bibliography / CSL Styles */
+.csl-bib-body {
+    margin-top: 2rem;
+    line-height: 1.6;
+}
+
+.csl-entry {
+    display: flex;
+    margin-bottom: 0.5rem;
+    align-items: baseline; /* Align label with first line of text */
+}
+
+.csl-left-margin {
+    min-width: 2.5rem; /* Space for [100] */
+    margin-right: 0.5rem;
+    text-align: right;
+    font-family: var(--font-mono);
+    color: var(--accent);
+}
+
+.csl-right-inline {
+    flex: 1;
+}

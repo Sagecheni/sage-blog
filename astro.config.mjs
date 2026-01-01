@@ -7,6 +7,9 @@ import sitemap from "@astrojs/sitemap";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { rehypeImageFigure } from "./src/plugins/rehype-image-figure.mjs";
+import remarkDirective from "remark-directive";
+import { remarkDirectiveHandle } from "./src/plugins/remark-directive-rehype.js";
+import { rehypeCitationFrontmatter } from "./src/plugins/rehype-citation-frontmatter.mjs";
 
 import mdx from "@astrojs/mdx";
 
@@ -18,13 +21,22 @@ export default defineConfig({
     plugins: [tailwindcss(), vitePluginSvgr({})],
   },
   devToolbar: {
-    enabled: false,
+    enabled: true,
   },
   integrations: [react(), sitemap(), expressiveCode(), mdx()],
 
   markdown: {
-    remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeKatex, rehypeImageFigure],
+    remarkPlugins: [remarkMath, remarkDirective, remarkDirectiveHandle],
+    rehypePlugins: [
+      rehypeKatex,
+      rehypeImageFigure,
+      [rehypeCitationFrontmatter, {
+        csl: "public/ieee.csl",
+        lang: "en-US",
+        linkCitations: true,
+        bibliography: "public/bibliography.bib",
+      }],
+    ],
     shikiConfig: {
       defaultColor: false,
       themes: {

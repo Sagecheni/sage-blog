@@ -1,0 +1,15 @@
+<script>
+  import mermaid from 'mermaid';
+  
+  document.addEventListener('astro:page-load', () => {
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    mermaid.run({
+        querySelector: '.mermaid'
+    });
+  });
+  
+  // Also run on initial load if view transitions aren't used or for first paint
+  if (!document.startViewTransition) {
+      mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+  }
+</script>
