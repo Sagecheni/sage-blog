@@ -31,10 +31,12 @@ const { title, description, author, url, pubDate, isHome = false } = Astro.props
       document.documentElement.classList.add("dark");
     </script>
   </head>
-  <body class:list={["body-margin flex flex-col min-h-svh", isHome ? "home-geometry" : ""]}>
-    <Header />
-    <main class="main-margin relative z-1 flex-1">
-      <slot />
-    </main>
+  <body class:list={["min-h-svh", isHome ? "home-geometry" : ""]}>
+    <div class="body-margin flex flex-col min-h-svh">
+      <Header />
+      <main class="main-margin relative z-1 flex-1">
+        <slot />
+      </main>
+    </div>
   </body>
 </html>
