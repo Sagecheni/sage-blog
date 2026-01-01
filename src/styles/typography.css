@@ -32,17 +32,18 @@
   }
 
   /* heading */
+  /* heading */
   .heading {
-    @apply py-6 text-5xl font-semibold select-none;
+    @apply py-6 text-5xl select-none;
   }
   .sub-heading {
     @apply py-6 text-5xl select-none;
   }
   .section-heading {
-    @apply pb-6 text-center text-3xl font-light tracking-widest select-none;
+    @apply pb-6 text-center text-3xl tracking-widest select-none;
   }
   .blog-title {
-    @apply py-3 pt-6 text-5xl font-semibold select-none;
+    @apply py-3 pt-6 text-5xl select-none;
   }
 
   /* common */

@@ -63,8 +63,9 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
 
-  --font-sans: "Space Grotesk Variable";
+  --font-sans: "Space Grotesk Variable", "LXGW WenKai Screen";
   --font-mono: "IBM Plex Mono";
+  --font-heading: "Bangers", "ZCOOL QingKe HuangYou", cursive;
 }
 
 /* BASE STYLING */
@@ -72,6 +73,10 @@
   /* layouts */
   html {
     @apply bg-background text-foreground selection:bg-accent selection:text-background scroll-smooth antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: 0.05em; /* Bangers looks better with slight spacing */
   }
   body {
     --z-old: 1;
