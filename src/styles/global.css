@@ -20,16 +20,19 @@
 } */
 
 /* COLOR SCHEME */
+/* P5R THEME COLORS */
 .dark {
-  --background: var(--color-zinc-800);
-  --foreground: var(--color-zinc-300);
-  --accent: var(--color-yellow-500);
+  /* P5R Dark: Pure Black, White Text, Bold Red Accent */
+  --background: #000000;
+  --foreground: #ffffff;
+  --accent: #D8000C;
 }
 
 .light {
-  --background: var(--color-gray-100);
-  --foreground: var(--color-gray-800);
-  --accent: var(--color-red-500);
+  /* P5R Light: White Background, Black Text, Bold Red Accent */
+  --background: #ffffff;
+  --foreground: #000000;
+  --accent: #D8000C;
 }
 
 /* CODE BLOCK */
@@ -73,6 +76,10 @@
   body {
     --z-old: 1;
     --z-new: 2;
+    background-color: var(--background);
+    background-image: radial-gradient(var(--foreground) 1px, transparent 1px);
+    background-size: 30px 30px;
+    background-position: 0 0;
   }
   .dark {
     --z-old: 2;
@@ -86,20 +93,30 @@
 
 /* SCROLLBAR STYLING */
 @layer base {
+  /* Custom P5R Scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 10px;
+    height: 10px;
   }
 
   ::-webkit-scrollbar-track {
-    background-color: transparent;
+    background-color: #000000;
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: var(--color-foreground);
+    background-color: #D8000C;
+    border: 2px solid #000000; /* Create a 'floating' look */
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--color-accent);
+    background-color: #ff0015;
+  }
+
+  /* P5R Selection Style */
+  ::selection {
+    background-color: #D8000C;
+    color: #ffffff;
+     text-shadow: 1px 1px 0 #000;
   }
 }
 

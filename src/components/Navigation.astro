@@ -6,24 +6,24 @@
   <a
     href="/"
     class:list={[
-      "navigation animation",
-      Astro.url.pathname === "/" ? "text-accent" : "",
+      "navigation animation px-2 py-1 font-bold -skew-x-12",
+      Astro.url.pathname === "/" ? "bg-accent text-white" : "text-foreground hover:bg-white hover:text-black",
     ]}>首页</a
   >
   <span class="text-muted-foreground">/</span>
   <a
     href="/blog"
     class:list={[
-      "navigation animation",
-      Astro.url.pathname.startsWith("/blog") ? "text-accent" : "",
+      "navigation animation px-2 py-1 font-bold -skew-x-12",
+      Astro.url.pathname.startsWith("/blog") ? "bg-accent text-white" : "text-foreground hover:bg-white hover:text-black",
     ]}>博客</a
   >
   <span class="text-muted-foreground">/</span>
   <a
     href="/about"
     class:list={[
-      "navigation animation",
-      Astro.url.pathname.startsWith("/about") ? "text-accent" : "",
+      "navigation animation px-2 py-1 font-bold -skew-x-12",
+      Astro.url.pathname.startsWith("/about") ? "bg-accent text-white" : "text-foreground hover:bg-white hover:text-black",
     ]}>关于</a
   >
 </nav>

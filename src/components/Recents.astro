@@ -22,12 +22,13 @@ const recentBlogs = blogs_
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
 
-<h2 class="section-heading">R E C E N T S</h2>
+<h2 class="section-heading transform -skew-x-12 inline-block bg-red-600 text-white px-4 py-1 mb-4 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">R E C E N T S</h2>
 <ul class="grid gap-3 py-6">
   {
     recentBlogs.map((blog: BlogType) => {
       return (
-        <li>
+        <li class="transform transition-transform hover:-skew-x-2 hover:scale-[1.02] duration-300">
+          <div style="clip-path: polygon(2% 0, 100% 0, 98% 100%, 0% 100%);">
           <FeatureCard
             title={blog.data.title}
             date={blog.data.date
@@ -41,6 +42,7 @@ const recentBlogs = blogs_
             tags={blog.data.tags}
             readTime={blog.data.readTime}
           />
+          </div>
         </li>
       );
     })
