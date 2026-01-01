@@ -1,12 +1,10 @@
 ---
 slug: "test-markdown-features"
 title: "Markdown Features Test"
-date: 2025-05-31
+date: 2025-12-31
 description: "Testing new markdown features: Citations, directives, and mermaid."
 author: "Sage"
 tags: ["tech"]
-featured: false
-editable: false
 bibliography: public/bibs/ai.bib
 ---
 
