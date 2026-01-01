@@ -5,15 +5,15 @@ export interface Props {
   author: string;
   url: string;
   pubDate?: Date;
+  isHome?: boolean;
 }
 
 import "@fontsource-variable/space-grotesk";
 import "@fontsource/ibm-plex-mono";
 import Seo from "../components/Seo.astro";
 import Header from "../components/Header.astro";
-import Footer from "../components/Footer.astro";
 import "../styles/global.css";
-const { title, description, author, url, pubDate } = Astro.props;
+const { title, description, author, url, pubDate, isHome = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -25,20 +25,13 @@ const { title, description, author, url, pubDate } = Astro.props;
     <meta name="generator" content={Astro.generator} />
     <Seo {title} {description} {author} {url} {pubDate} />
     <script is:inline>
-      const saved = localStorage.getItem("theme");
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)",
-      ).matches;
-      document.documentElement.classList.add(
-        saved || (prefersDark ? "dark" : "light"),
-      );
+      document.documentElement.classList.add("dark");
     </script>
   </head>
-  <body class="body-margin">
+  <body class:list={["body-margin flex flex-col min-h-svh", isHome ? "home-geometry" : ""]}>
     <Header />
-    <main class="main-margin bg-background relative z-1 min-h-svh">
+    <main class="main-margin relative z-1 flex-1">
       <slot />
     </main>
-    <Footer />
   </body>
 </html>

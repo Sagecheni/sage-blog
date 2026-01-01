@@ -29,19 +29,20 @@ const recentBlogs = blogs_
       return (
         <li class="transform transition-transform hover:-skew-x-2 hover:scale-[1.02] duration-300">
           <div style="clip-path: polygon(2% 0, 100% 0, 98% 100%, 0% 100%);">
-          <FeatureCard
-            title={blog.data.title}
-            date={blog.data.date
-              .toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })
-              .slice(0, 11)}
-            url={`/blog/${blog.data.slug}`}
-            tags={blog.data.tags}
-            readTime={blog.data.readTime}
-          />
+            <FeatureCard
+              title={blog.data.title}
+              date={blog.data.date
+                .toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })
+                .slice(0, 11)}
+              url={`/blog/${blog.data.slug}`}
+              tags={blog.data.tags}
+              readTime={blog.data.readTime}
+              isGeometric={true}
+            />
           </div>
         </li>
       );

@@ -71,19 +71,29 @@
 @layer base {
   /* layouts */
   html {
-    @apply bg-background text-foreground selection:bg-accent selection:text-background overflow-y-scroll scroll-smooth antialiased;
+    @apply bg-background text-foreground selection:bg-accent selection:text-background scroll-smooth antialiased;
   }
   body {
     --z-old: 1;
     --z-new: 2;
     background-color: var(--background);
-    background-image: radial-gradient(var(--foreground) 1px, transparent 1px);
-    background-size: 30px 30px;
-    background-position: 0 0;
+    background-size: 100% 100%;
+    background-attachment: fixed;
   }
   .dark {
     --z-old: 2;
     --z-new: 1;
+  }
+
+  /* HOME ONLY GEOMETRY */
+  .home-geometry {
+    background-image:
+      /* Bottom-Right Rays */
+      linear-gradient(115deg, transparent 70%, #D8000C 70%, #D8000C 85%, transparent 85%),
+      linear-gradient(115deg, transparent 86%, #ffffff 86%, #ffffff 87%, transparent 87%),
+      /* Top-Left Rays (Symmetric) */
+      linear-gradient(115deg, transparent 15%, #D8000C 15%, #D8000C 30%, transparent 30%),
+      linear-gradient(115deg, transparent 13%, #ffffff 13%, #ffffff 14%, transparent 14%);
   }
 
   button:not(:disabled) {

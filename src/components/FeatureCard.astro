@@ -1,5 +1,5 @@
 ---
-const { title, date, url, tags, readTime, description } = Astro.props;
+const { title, date, url, tags, readTime, description, isGeometric = false } = Astro.props;
 import IconChevronRight from "../assets/icons/chevron-right.svg";
 import IconArrowRight from "../assets/icons/arrow-right.svg";
 import IconCalendarWeek from "../assets/icons/calendar-week.svg";
@@ -8,7 +8,11 @@ import IconClockHour3 from "../assets/icons/clock-hour-3.svg";
 
 <a
   href={url}
-  class="hover:bg-accent hover:ring-accent group ring-background animation flex h-full flex-col gap-3 rounded-lg pb-3 shadow-lg ring-3 select-none hover:shadow-none hover:ring-3 active:ring-0 dark:shadow-2xl"
+  class:list={[
+    "group flex h-full flex-col gap-3 pb-3 transition-all select-none",
+    !isGeometric && "hover:bg-accent hover:ring-accent ring-background rounded-lg shadow-lg ring-3 hover:shadow-none hover:ring-3 active:ring-0 dark:shadow-2xl",
+    isGeometric && "hover:bg-accent ring-0 rounded-none bg-transparent",
+  ]}
 >
   <div class="mx-4 mt-2 flex justify-between gap-6">
     <h3

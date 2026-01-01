@@ -1,11 +1,10 @@
 ---
-import ThemeToggle from "./ThemeToggle";
 import Navigation from "./Navigation.astro";
 import IconRss from "../assets/icons/rss.svg";
 ---
 
 <header
-  class="header-margin sticky top-0 z-0 flex items-center justify-between"
+  class="header-margin sticky top-0 z-50 flex items-center justify-between"
 >
   <a
     href="/"
@@ -18,7 +17,6 @@ import IconRss from "../assets/icons/rss.svg";
     <Navigation />
 
     <div class="flex items-center justify-center gap-4">
-      <ThemeToggle client:idle />
       <a href="/rss.xml" aria-label="rss" title="rss"
         ><IconRss class="active-foreground size-5" /></a
       >
