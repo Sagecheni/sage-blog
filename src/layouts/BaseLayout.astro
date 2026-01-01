@@ -6,6 +6,7 @@ export interface Props {
   url: string;
   pubDate?: Date;
   isHome?: boolean;
+  showBackground?: boolean;
 }
 
 import "@fontsource-variable/space-grotesk";
@@ -16,7 +17,7 @@ import "lxgw-wenkai-screen-web";
 import Seo from "../components/Seo.astro";
 import Header from "../components/Header.astro";
 import "../styles/global.css";
-const { title, description, author, url, pubDate, isHome = false } = Astro.props;
+const { title, description, author, url, pubDate, isHome = false, showBackground = true } = Astro.props;
 ---
 
 <!doctype html>
@@ -31,7 +32,7 @@ const { title, description, author, url, pubDate, isHome = false } = Astro.props
       document.documentElement.classList.add("dark");
     </script>
   </head>
-  <body class:list={["min-h-svh", isHome ? "home-geometry" : ""]}>
+  <body class:list={["min-h-svh", showBackground ? "home-geometry" : ""]}>
     <div class="body-margin flex flex-col min-h-svh">
       <Header />
       <main class="main-margin relative z-1 flex-1">
