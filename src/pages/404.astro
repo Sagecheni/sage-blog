@@ -8,6 +8,18 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   author="Rahul"
   url=""
 >
-  <h1 class="heading text-center">404</h1>
-  <p class="paragraph text-center">The page you requested cannot be found!</p>
+<div class="flex flex-col items-center justify-center min-h-[60vh] gap-8">
+    <img
+      src="/images/character7.png"
+      alt="没有找到该页面"
+      class="max-w-[600px] w-full h-auto object-cover rounded-xl shadow-2xl"
+    />
+    <h1 class="text-3xl font-bold text-neutral-900 dark:text-white">没有找到该页面</h1>
+    <a
+      href="/"
+      class="px-8 py-3 bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 rounded-full font-bold text-lg transition-all hover:scale-105 hover:shadow-lg"
+    >
+      返回首页
+    </a>
+  </div>
 </BaseLayout>
