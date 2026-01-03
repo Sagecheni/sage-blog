@@ -1,0 +1,58 @@
+---
+---
+
+<div id="p5r-loader" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-950 transition-opacity duration-700 ease-out">
+
+
+  <!-- Ransom Note Text -->
+  <div class="flex items-center gap-2 font-['Bangers'] text-4xl tracking-widest sm:text-6xl">
+    <span class="ransom-char -rotate-6 bg-white px-2 py-1 text-black shadow-[4px_4px_0px_0px_rgba(217,25,28,1)]">L</span>
+    <span class="ransom-char rotate-3 bg-[#d9191c] px-2 py-1 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.8)]">O</span>
+    <span class="ransom-char -rotate-3 bg-zinc-800 px-2 py-1 text-white shadow-[-3px_3px_0px_0px_#d9191c]">A</span>
+    <span class="ransom-char rotate-6 bg-white px-2 py-1 text-black shadow-[3px_-3px_0px_0px_#d9191c]">D</span>
+    <span class="ransom-char -rotate-2 bg-[#d9191c] px-2 py-1 text-black shadow-[3px_3px_0px_0px_white]">I</span>
+    <span class="ransom-char rotate-4 bg-black px-2 py-1 text-[#d9191c] shadow-[-2px_4px_0px_0px_white]">N</span>
+    <span class="ransom-char -rotate-6 bg-white px-2 py-1 text-black shadow-[4px_2px_0px_0px_#d9191c]">G</span>
+    <span class="animate-bounce text-[#d9191c]">...</span>
+  </div>
+</div>
+
+<style>
+  /* 5-pointed Star Clip Path */
+  .star-shape {
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  }
+
+  /* Custom Bounce Animation for letters */
+  .ransom-char {
+    display: inline-block;
+    animation: ransom-bounce 2s infinite;
+  }
+
+  .ransom-char:nth-child(2n) {
+    animation-delay: 0.1s;
+  }
+  .ransom-char:nth-child(3n) {
+    animation-delay: 0.2s;
+  }
+
+  @keyframes ransom-bounce {
+    0%, 100% { transform: translateY(0) rotate(var(--tw-rotate)); }
+    50% { transform: translateY(-10px) rotate(var(--tw-rotate)); }
+  }
+</style>
+
+<script>
+  // Hide loader when window loads
+  window.addEventListener('load', () => {
+    const loader = document.getElementById('p5r-loader');
+    if (loader) {
+      // Fade out
+      loader.classList.add('opacity-0', 'pointer-events-none');
+      // Optional: remove from DOM after transition
+      setTimeout(() => {
+        loader.style.display = 'none';
+      }, 700);
+    }
+  });
+</script>

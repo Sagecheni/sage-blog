@@ -16,6 +16,7 @@ import "@fontsource/zcool-qingke-huangyou";
 import "lxgw-wenkai-screen-web";
 import Seo from "../components/Seo.astro";
 import Header from "../components/Header.astro";
+import P5RLoader from "../components/P5RLoader.astro";
 import "../styles/global.css";
 const { title, description, author, url, pubDate, isHome = false, showBackground = true } = Astro.props;
 ---
@@ -33,6 +34,7 @@ const { title, description, author, url, pubDate, isHome = false, showBackground
     </script>
   </head>
   <body class:list={["min-h-svh", showBackground ? "home-geometry" : ""]}>
+    <P5RLoader />
     <div class="body-margin flex flex-col min-h-svh">
       <Header />
       <main class="main-margin relative z-1 flex-1">
