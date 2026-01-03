@@ -89,6 +89,7 @@
     background-color: var(--background);
     background-size: 100% 100%;
     background-attachment: fixed;
+    isolation: isolate; /* Create stacking context for negative z-index children */
   }
   .dark {
     --z-old: 2;
@@ -97,22 +98,7 @@
 
   /* HOME ONLY GEOMETRY */
   .home-geometry {
-    background-image:
-      /* === DARKENING OVERLAY (For Readability) === */
-      linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-      /* === MAIN BACKGROUND IMAGE === */ url("/images/character6.jpeg");
-
-    background-size:
-      100% 100%,
-      cover;
-
-    background-repeat: no-repeat, no-repeat;
-
-    background-position:
-      0 0,
-      center center;
-
-    background-attachment: fixed;
+    /* Background handled by BaseLayout via Astro Image component */
   }
 
   /* BLOG BACKGROUND TEXTURE - OPTION B: SHARDS */

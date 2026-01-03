@@ -5,8 +5,15 @@ import TerminalWindow from "../components/TerminalWindow.astro";
 const title = "About";
 const description = "About Me";
 
-const skills = [
-  "Python", "Go", "Git", "Docker", "Linux","JavaScript", "TypeScript", "Astro", "Tailwind", "Node.js"
+const confidants = [
+  { name: "Python", rank: 5 },
+  { name: "Go", rank: 3 },
+  { name: "Git", rank: 4 },
+  { name: "Docker", rank: 3 },
+  { name: "Linux", rank: 4 },
+  { name: "TypeScript", rank: 3 },
+  { name: "Astro", rank: 2 },
+  { name: "Node.js", rank: 2 },
 ];
 ---
 
@@ -18,38 +25,58 @@ const skills = [
 >
   <div class="relative z-10 max-w-5xl mx-auto px-4 py-12 sm:py-24 space-y-20">
     
-    {/* Header Section */}
-    <section class="flex flex-col items-center space-y-8">
-      <div class="relative group">
-        <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-red-600 to-black blur-xl opacity-70"></div>
-        <img 
-          id="sage-avatar"
-          src="/sagec.jpeg"
-          alt="Sage Avatar" 
-          class="relative w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-white/10 shadow-2xl object-cover cursor-pointer transition-transform duration-700 ease-in-out"
-        />
-      </div>
-      
-      <div class="text-center space-y-3">
-        <h1 class="text-4xl md:text-5xl font-bold tracking-widest -skew-x-12 transform flex justify-center items-center gap-1">
-          <span class="bg-red-600 text-white px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transform -rotate-2">S</span>
-          <span class="bg-white text-black px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-3 scale-110 z-10 font-black">A</span>
-          <span class="bg-red-600 text-white px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transform -rotate-1">G</span>
-          <span class="bg-red-600 text-white px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transform rotate-2">E</span>
-        </h1>
+    {/* Header Section - WANTED Poster Style */}
+    <section class="flex flex-col items-center space-y-8 py-12">
+      <div class="relative group cursor-pointer perspective-1000">
+        
+        {/* WANTED Poster Frame */}
+        <div class="absolute -inset-8 bg-[#d9191c] transform rotate-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-0" style="clip-path: polygon(2% 0, 100% 2%, 98% 100%, 0% 98%)"></div>
+        <div class="absolute -inset-8 bg-black transform -rotate-1 scale-[0.98] opacity-0 group-hover:opacity-100 transition-all duration-300 z-0" style="clip-path: polygon(2% 0, 100% 2%, 98% 100%, 0% 98%)"></div>
+
+        {/* WANTED Heading */}
+        <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-[160%] text-center z-20 opacity-0 group-hover:opacity-100 group-hover:translate-y-4 transition-all duration-300 delay-75 pointer-events-none">
+             <span class="text-6xl md:text-7xl font-black text-[#d9191c] tracking-widest leading-none drop-shadow-[4px_4px_0_#000]" style="font-family: 'Bangers', cursive; -webkit-text-stroke: 2px white;">
+               WANTED
+             </span>
+        </div>
+
+        {/* Avatar Container */}
+        <div class="relative w-32 h-32 md:w-40 md:h-40 z-30 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+             {/* Red Tint Overlay on Hover */}
+             <div class="absolute inset-0 rounded-full bg-red-600/20 mix-blend-hard-light opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none"></div>
+             
+             {/* Original Glow */}
+             <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-red-600 to-black blur-xl opacity-70 group-hover:opacity-0 transition-opacity"></div>
+             
+             <img 
+              id="sage-avatar"
+              src="/sagec.jpeg"
+              alt="Sage Avatar" 
+              class="relative w-full h-full rounded-full border-2 border-white/10 shadow-2xl object-cover transition-all duration-700 ease-in-out group-hover:border-4 group-hover:border-black group-hover:grayscale group-hover:contrast-125"
+            />
+            
+            {/* Prisoner Number / Decoration on Hover */}
+            <div class="absolute -bottom-6 -right-10 z-30 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-100 transform rotate-12">
+               <span class="bg-black text-white px-2 py-1 font-mono font-bold text-xs border border-white -skew-x-12 block shadow-[2px_2px_0_#d9191c]">
+                 P.V. #001
+               </span>
+            </div>
+        </div>
+
+        {/* Name / Reward */}
+        <div class="text-center mt-6 h-16 relative z-10">
+           {/* Normal State Name */}
+           <h1 class="text-4xl md:text-5xl font-bold tracking-widest -skew-x-12 transform flex justify-center items-center gap-1 transition-opacity duration-300">
+              <span class="bg-red-600 text-white px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transform -rotate-2">S</span>
+              <span class="bg-white text-black px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-3 scale-110 z-10 font-black">A</span>
+              <span class="bg-red-600 text-white px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transform -rotate-1">G</span>
+              <span class="bg-red-600 text-white px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transform rotate-2">E</span>
+           </h1>
+        </div>
       </div>
     </section>
 
-    <script>
-      const avatar = document.getElementById('sage-avatar');
-      let rotation = 0;
-      if (avatar) {
-        avatar.addEventListener('click', () => {
-          rotation += 360;
-          avatar.style.transform = `rotate(${rotation}deg)`;
-        });
-      }
-    </script>
+
 
     {/* Terminal Section */}
     <section class="py-8">
@@ -150,50 +177,102 @@ const skills = [
           </ul>
         </section>
 
-        {/* Skills */}
-        <section class="p-8 bg-zinc-900/80 backdrop-blur-md border border-white/5 space-y-6 relative overflow-hidden" style="clip-path: polygon(0 0, 100% 2%, 100% 98%, 2% 100%);">
-
+        {/* Skills - Graffiti Sticker Style */}
+        <section class="p-8 bg-zinc-900/80 backdrop-blur-md border border-white/5 space-y-8 relative overflow-hidden" style="clip-path: polygon(0 0, 100% 2%, 100% 98%, 2% 100%);">
           <h2 class="text-xl font-bold flex items-center gap-3">
              <span class="text-red-500">#</span> Skills
           </h2>
-          <div class="flex flex-wrap gap-2">
-            {skills.map((skill) => (
-              <span class="px-3 py-1.5 rounded-lg bg-white/5 text-zinc-300 text-xs font-mono border border-white/5 cursor-default">
-                {skill}
-              </span>
-            ))}
+          
+          <div class="flex flex-wrap justify-center gap-3 p-4">
+            {confidants.map((skill, index) => {
+              // Rotation Pattern: -3, 2, -1, 3...
+              const rotation = [ '-rotate-3', 'rotate-2', '-rotate-1', 'rotate-3', '-rotate-2' ][index % 5];
+              // Style Pattern: Black, White, Red...
+              const styleType = index % 3;
+              
+              let bgClass = "bg-black text-white border-white/20";
+              let rankColor = "bg-zinc-500";
+              let activeRankColor = "bg-red-500";
+              
+              if (styleType === 1) { // White/Paper
+                 bgClass = "bg-white text-black border-black shadow-[2px_2px_0_rgba(0,0,0,1)]";
+                 rankColor = "bg-zinc-300";
+                 activeRankColor = "bg-black";
+              } else if (styleType === 2) { // Red/Stamp
+                 bgClass = "bg-[#d9191c] text-white border-black shadow-[2px_2px_0_rgba(0,0,0,1)]";
+                 rankColor = "bg-red-900";
+                 activeRankColor = "bg-black";
+              } else { // Black/Tape
+                 bgClass = "bg-black text-white border-white shadow-[2px_2px_0_rgba(255,255,255,0.2)]";
+                 rankColor = "bg-zinc-700";
+                 activeRankColor = "bg-red-500";
+              }
+
+              return (
+                <div class={`relative group px-3 py-1.5 border-2 ${bgClass} transform ${rotation} hover:scale-110 hover:z-10 hover:rotate-0 transition-all duration-300 cursor-default select-none`}>
+                   <div class="flex flex-col items-center">
+                      <span class="text-lg font-black tracking-widest leading-none" style="font-family: 'Bangers', cursive;">
+                         {skill.name}
+                      </span>
+                      {/* Rank Dots */}
+                      <div class="flex gap-1 mt-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                             <div class={`w-1 h-1 rounded-full ${i < skill.rank ? activeRankColor : rankColor}`}></div>
+                          ))}
+                      </div>
+                   </div>
+                   {/* Tape Effect for Black items */}
+                   {styleType === 0 && (
+                      <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-white/20 -rotate-2 backdrop-blur-sm transform skew-x-12"></div>
+                   )}
+                </div>
+              );
+            })}
           </div>
         </section>
 
         
         {/* Contact */}
-         <section class="p-8 bg-zinc-900/80 backdrop-blur-md border border-white/5 space-y-6 relative overflow-hidden" style="clip-path: polygon(2% 2%, 98% 0, 100% 100%, 0 98%);">
-          
-          <h2 class="text-xl font-bold flex items-center gap-3">
-            <span class="text-red-500">#</span> Contact
-          </h2>
-          <div class="grid gap-3">
-            <a href="mailto:sagecheni@outlook.com" class="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 transition-all">
-              <div class="p-2 rounded-lg bg-red-500/10 text-red-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        {/* Contact - Calling Card Style (Fixed Overflow) */}
+         <section class="relative group perspective-1000 py-4"> {/* Added py-4 to give space for floating elements */}
+             {/* Wrapper handles rotation/scale for everything */}
+            <div class="relative transform transition-transform duration-500 group-hover:rotate-1 group-hover:scale-[1.02]">
+              
+              {/* Main Card Body (Clipped) */}
+              <div class="p-8 bg-[#d9191c] shadow-xl border-4 border-black border-dashed relative z-10" 
+                   style="clip-path: polygon(2% 0, 98% 2%, 100% 98%, 0% 100%);">
+                  <div class="space-y-4 relative z-10 pt-4">
+                     <a href="mailto:sagecheni@outlook.com" class="block bg-black text-white p-3 transform -skew-x-6 hover:skew-x-0 transition-transform border-2 border-white hover:bg-white hover:text-black hover:border-black group/link">
+                        <div class="flex items-center justify-between font-bold font-mono">
+                          <span>SEND MAIL</span>
+                          <span class="group-hover/link:animate-blink">_</span>
+                        </div>
+                        <div class="text-xs opacity-70 mt-1">sagecheni@outlook.com</div>
+                     </a>
+                     
+                     <a href="https://github.com/Sagecheni" target="_blank" class="block bg-black text-white p-3 transform -skew-x-6 hover:skew-x-0 transition-transform border-2 border-white hover:bg-white hover:text-black hover:border-black group/link">
+                        <div class="flex items-center justify-between font-bold font-mono">
+                          <span>GITHUB</span>
+                          <span class="group-hover/link:animate-blink">_</span>
+                        </div>
+                        <div class="text-xs opacity-70 mt-1">@Sagecheni</div>
+                     </a>
+                  </div>
+
+                  {/* Decorative Spinner (Inside Card) */}
+                  <div class="absolute bottom-2 right-2 opacity-50 pointer-events-none">
+                     <svg width="60" height="60" viewBox="0 0 100 100" class="animate-spin-slow">
+                        <path d="M50 0 L100 50 L50 100 L0 50 Z" fill="none" stroke="black" stroke-width="2"/>
+                     </svg>
+                  </div>
               </div>
-              <div class="flex flex-col">
-                <span class="text-xs text-zinc-500 font-mono">Email</span>
-                <span class="text-sm text-zinc-300">sagecheni@outlook.com</span>
+
+               {/* Ransom Note Header (Outside Clipped Card, Higher Z-Index) */}
+              <div class="absolute -top-4 -right-2 transform rotate-12 bg-black text-white px-4 py-2 font-black text-xl border-2 border-white shadow-lg z-20 pointer-events-none">
+                CONTACT ME!!
               </div>
-            </a>
-            
-             <a href="https://github.com/Sagecheni" target="_blank" class="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 transition-all">
-              <div class="p-2 rounded-lg bg-blue-500/10 text-red-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0 3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
-              </div>
-               <div class="flex flex-col">
-                <span class="text-xs text-zinc-500 font-mono">GitHub</span>
-                <span class="text-sm text-zinc-300">@Sagecheni</span>
-              </div>
-            </a>
-          </div>
-        </section>
+            </div>
+         </section>
 
       </div>
     </div>

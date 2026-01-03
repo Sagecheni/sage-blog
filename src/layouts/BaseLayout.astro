@@ -19,6 +19,9 @@ import Seo from "../components/Seo.astro";
 import Header from "../components/Header.astro";
 import P5RLoader from "../components/P5RLoader.astro";
 import "../styles/global.css";
+import { Image } from "astro:assets";
+import homeBg from "../assets/images/character6.jpeg";
+
 const { title, description, author, url, pubDate, isHome = false, showBackground = true, backgroundType } = Astro.props;
 
 // Determine which background class to use
@@ -46,6 +49,19 @@ if (backgroundType === 'home') {
     </script>
   </head>
   <body class:list={["min-h-svh", bgClass]}>
+    {/* Optimized Home Background with Overlay */}
+    {bgClass === 'home-geometry' && (
+      <div class="fixed inset-0 -z-10 select-none">
+        <div class="absolute inset-0 z-10 bg-black/60"></div>
+        <Image 
+          src={homeBg} 
+          alt="Persona 5 Royal Background" 
+          class="w-full h-full object-cover"
+          quality="mid"
+          loading="eager"
+        />
+      </div>
+    )}
     <P5RLoader />
     <div class="body-margin flex flex-col min-h-svh">
       <Header />

@@ -7,39 +7,105 @@ interface Props {
 const { title = "root@sage:~", class: className } = Astro.props;
 ---
 
-<div class:list={["w-full max-w-3xl mx-auto relative group", className]}>
-  {/* P5R Decorative Background (Rectangular) */}
-  <div class="absolute inset-0 bg-black border-2 border-zinc-500 translate-x-1 translate-y-1"></div>
-  
+<div class:list={["w-full max-w-3xl mx-auto relative group drop-shadow-[8px_8px_0_rgba(0,0,0,1)]", className]}>
   {/* Main Container */}
-  <div class="relative bg-black border-2 border-white overflow-hidden">
-    {/* P5R Header */}
-    <div class="bg-red-600 px-4 py-2 flex items-center justify-between border-b-2 border-white relative overflow-hidden">
-      {/* Texture for Header */}
-      <div class="absolute inset-0 opacity-20 bg-[url('/noise.png')]"></div>
+  <div class="relative z-10 bg-zinc-950/80 backdrop-blur-xl border-2 border-zinc-500 overflow-hidden" style="clip-path: polygon(0 0, 100% 2%, 98% 100%, 2% 98%);">
+    {/* P5R Header - Skewed & Styled */}
+    <div class="bg-[#d9191c] px-6 py-3 flex items-center justify-between border-b-4 border-black relative">
+       {/* Striped Pattern Overlay */}
+       <div class="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,transparent_25%,#000_25%,#000_50%,transparent_50%,transparent_75%,#000_75%,#000_100%)] bg-[length:10px_10px]"></div>
+       
       {/* Title */}
-      <div class="relative z-10 flex items-center gap-2">
-        <span class="text-black font-black uppercase tracking-widest text-lg" style="font-family: 'Bangers', cursive;">
-          OMNIPOTENT ORB
+      <div class="relative z-10 flex items-center gap-3 transform -skew-x-12">
+        <span class="bg-black text-white px-2 py-0.5 text-xs font-mono font-bold border border-white">
+          SYS_WIDGET
         </span>
-        <span class="text-white/80 font-mono text-xs">
-          // {title}
+        <span class="text-white font-black uppercase tracking-widest text-xl drop-shadow-[2px_2px_0_rgba(0,0,0,1)]" style="font-family: 'Bangers', cursive;">
+          OMNIPOTENT ORB
         </span>
       </div>
 
-      {/* Stars Decoration */}
-      <div class="flex gap-1">
-        <span class="text-black text-xl animate-pulse">★</span>
-        <span class="text-white text-xl animate-pulse delay-75">★</span>
-        <span class="text-black text-xl animate-pulse delay-150">★</span>
+      {/* Window Controls Decoration */}
+      <div class="flex gap-2 relative z-10">
+        <div class="w-3 h-3 bg-black border border-white"></div>
+        <div class="w-3 h-3 bg-white border border-black"></div>
+        <div class="w-3 h-3 bg-black border border-white"></div>
       </div>
     </div>
+
     {/* Terminal Content */}
-    <div class="p-6 text-zinc-300 space-y-4 font-mono leading-relaxed h-[500px] overflow-y-auto custom-scrollbar bg-zinc-900/50">
-      <slot />
+    <div id="terminal-content" class="relative p-6 text-zinc-300 space-y-4 font-mono leading-relaxed h-[500px] overflow-y-auto custom-scrollbar bg-transparent">
+      {/* CRT Scanline & Bloom Overlay */}
+      <div class="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,6px_100%] bg-repeat opacity-20"></div>
+      <div class="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_800px_at_10%_20%,rgba(217,25,28,0.05),transparent)]"></div>
+      
+      {/* Content wrapper to stay above overlays */}
+      <div class="relative z-10 terminal-slot-content opacity-0 transition-opacity duration-300">
+        <slot />
+      </div>
     </div>
+    
+    {/* Footer Decoration */}
+    <div class="h-2 bg-[#d9191c] border-t-2 border-black"></div>
   </div>
 </div>
+
+<script>
+  // Simple "Typewriter" Reveal Effect
+  // It finds all leaf elements (or text-heavy elements) and reveals them sequentially
+  
+  function initTerminalTypewriter() {
+    const terminals = document.querySelectorAll('#terminal-content');
+    
+    terminals.forEach(terminal => {
+      const wrapper = terminal.querySelector('.terminal-slot-content');
+      if (!wrapper) return;
+
+      // Reveal wrapper first to avoid layout shifts? No, keep it hidden until we process.
+      // Actually we want hidden children.
+      wrapper.classList.remove('opacity-0');
+
+      // Find all significant distinct text blocks to animate
+      // We look for elements that likely contain text content to display
+      const allElements = wrapper.querySelectorAll('*');
+      const textElements = Array.from(allElements).filter((el): el is HTMLElement => {
+         // Keep element if it has direct text content and is not just a container for other elements
+         // Or if it's a leaf node
+         return el instanceof HTMLElement && el.children.length === 0 && (el.textContent?.trim().length || 0) > 0;
+      });
+
+      // Prepare elements: hide them
+      textElements.forEach(el => {
+        el.classList.add('opacity-0', 'translate-y-2');
+        el.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
+      });
+
+      // Animate them one by one
+      let delay = 0;
+      const interval = 30; // ms between lines
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            textElements.forEach((el, index) => {
+              setTimeout(() => {
+                el.classList.remove('opacity-0', 'translate-y-2');
+              }, delay);
+              delay += interval;
+            });
+            observer.disconnect(); // Only run once
+          }
+        });
+      }, { threshold: 0.1 });
+
+      observer.observe(terminal);
+    });
+  }
+
+  // Run on load and View Transitions
+  document.addEventListener('astro:page-load', initTerminalTypewriter);
+  document.addEventListener('DOMContentLoaded', initTerminalTypewriter);
+</script>
 
 <style>
   /* P5R Red Scrollbar */
