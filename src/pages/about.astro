@@ -1,20 +1,12 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import TerminalWindow from "../components/TerminalWindow.astro";
+import { Image } from "astro:assets";
+import sageAvatar from "../assets/images/sagec.jpeg";
+import { confidants } from "../data/confidants";
 
 const title = "About";
 const description = "About Me";
-
-const confidants = [
-  { name: "Python", rank: 5 },
-  { name: "Go", rank: 3 },
-  { name: "Git", rank: 4 },
-  { name: "Docker", rank: 3 },
-  { name: "Linux", rank: 4 },
-  { name: "TypeScript", rank: 3 },
-  { name: "Astro", rank: 2 },
-  { name: "Node.js", rank: 2 },
-];
 ---
 
 <BaseLayout
@@ -41,16 +33,15 @@ const confidants = [
         </div>
 
         {/* Avatar Container */}
-        <div class="relative w-32 h-32 md:w-40 md:h-40 z-30 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+        <div class="relative w-32 h-32 md:w-40 md:h-40 z-30 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 mx-auto">
              {/* Red Tint Overlay on Hover */}
              <div class="absolute inset-0 rounded-full bg-red-600/20 mix-blend-hard-light opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none"></div>
              
              {/* Original Glow */}
              <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-red-600 to-black blur-xl opacity-70 group-hover:opacity-0 transition-opacity"></div>
              
-             <img 
-              id="sage-avatar"
-              src="/sagec.jpeg"
+             <Image 
+              src={sageAvatar}
               alt="Sage Avatar" 
               class="relative w-full h-full rounded-full border-2 border-white/10 shadow-2xl object-cover transition-all duration-700 ease-in-out group-hover:border-4 group-hover:border-black group-hover:grayscale group-hover:contrast-125"
             />
