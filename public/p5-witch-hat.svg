@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Concept: A Phantom Thief style Witch's Hat with a Quill Feather -->
+  
+  <!-- Background: Red jagged circle/splash -->
+  <path d="M50 5 L80 20 L95 50 L80 80 L50 95 L20 80 L5 50 L20 20 Z" fill="#d9191c" />
+  
+  <!-- Witch Hat (Black Silhouette) -->
+  <g transform="translate(50,55) rotate(-5) translate(-50,-55)">
+      <!-- Brim -->
+      <path d="M15 70 C15 70, 30 65, 50 65 C70 65, 85 70, 85 70 L90 80 L10 80 L15 70" fill="#000" />
+      
+      <!-- Cone / Top -->
+      <path d="M25 70 L45 15 L50 10 L65 25 L55 70" fill="#000" />
+      
+      <!-- Hat Band (White) -->
+      <path d="M28 60 L62 60 L60 70 L30 70 Z" fill="#fff" />
+  </g>
+
+  <!-- Quill / Feather (As the hat's accessory) -->
+  <g transform="translate(65, 50) rotate(15)">
+      <path d="M0 0 C5 -10, 10 -20, 0 -30 C-10 -20, -5 -10, 0 0" fill="#fff" stroke="#000" stroke-width="2" />
+      <path d="M0 -30 L0 10" stroke="#000" stroke-width="1.5" />
+  </g>
+
+  <!-- P5 Star Accent -->
+  <path d="M30 30 L35 32 L40 30 L38 35 L42 40 L36 40 L34 45 L30 40 L24 40 L28 35 Z" fill="#fff" />
+
+</svg>
