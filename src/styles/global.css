@@ -115,6 +115,37 @@
     background-attachment: fixed;
   }
 
+  /* BLOG BACKGROUND TEXTURE - OPTION B: SHARDS */
+  .blog-texture {
+    background-color: #000000;
+    background-image:
+      /* Top Left Dark Grey Shard */
+      linear-gradient(135deg, #111111 0%, #111111 20%, transparent 20.1%),
+      /* Bottom Right Accent Hint (Subtle Red) */
+        linear-gradient(
+          315deg,
+          rgba(216, 0, 12, 0.1) 0%,
+          rgba(216, 0, 12, 0.1) 15%,
+          transparent 15.1%
+        ),
+      /* Bottom Right Dark Shard */
+        linear-gradient(315deg, #080808 0%, #080808 30%, transparent 30.1%),
+      /* Subtle Grid Overlay */
+        radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+
+    background-size:
+      100% 100%,
+      100% 100%,
+      100% 100%,
+      30px 30px;
+    background-position:
+      center,
+      center,
+      center,
+      0 0;
+    background-attachment: fixed;
+  }
+
   button:not(:disabled) {
     cursor: pointer;
   }

@@ -218,12 +218,17 @@ function removeMarkdown(markdown: string) {
                          {snippet || blog.data.description}
                        </p>
                       
-                       <div class="mt-4 flex flex-wrap gap-2">
-                        {blog.data.tags.map((tag) => (
-                          <span class="text-xs font-mono text-muted-foreground/80 bg-secondary/50 px-2 py-1 rounded-sm">
-                            #{tag}
-                          </span>
-                        ))}
+                       <div class="mt-4 flex flex-wrap gap-3 items-center">
+                        {blog.data.tags.map((tag, i) => {
+                          const rotation = ["rotate-1", "-rotate-2", "rotate-3", "-rotate-1"][tag.length % 4];
+                          const bg = i % 2 === 0 ? "bg-black" : "bg-red-600";
+                          const text = "text-white";
+                          return (
+                            <span class={`text-xs font-bold uppercase tracking-wide px-2 py-0.5 transform ${rotation} ${bg} ${text} shadow-sm border border-white/20`}>
+                              {tag}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                   </a>

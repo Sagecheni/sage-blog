@@ -6,7 +6,7 @@ const title = "About";
 const description = "About Me";
 
 const skills = [
-  "JavaScript", "TypeScript", "React", "Astro", "Tailwind", "Node.js", "Python", "Go", "Git", "Docker", "Linux"
+  "Python", "Go", "Git", "Docker", "Linux","JavaScript", "TypeScript", "Astro", "Tailwind", "Node.js"
 ];
 ---
 
@@ -23,24 +23,37 @@ const skills = [
       <div class="relative group">
         <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-red-600 to-black blur-xl opacity-70"></div>
         <img 
+          id="sage-avatar"
           src="/sagec.jpeg"
           alt="Sage Avatar" 
-          class="relative w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-white/10 shadow-2xl object-cover"
+          class="relative w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-white/10 shadow-2xl object-cover cursor-pointer transition-transform duration-700 ease-in-out"
         />
       </div>
       
       <div class="text-center space-y-3">
-        <h1 class="text-4xl md:text-5xl font-bold tracking-tight -skew-x-12 transform">
-          <span class="bg-red-600 text-white px-4 py-1 block shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
-            SAGE
-          </span>
+        <h1 class="text-4xl md:text-5xl font-bold tracking-widest -skew-x-12 transform flex justify-center items-center gap-1">
+          <span class="bg-red-600 text-white px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transform -rotate-2">S</span>
+          <span class="bg-white text-black px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-3 scale-110 z-10 font-black">A</span>
+          <span class="bg-red-600 text-white px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transform -rotate-1">G</span>
+          <span class="bg-red-600 text-white px-3 py-1 block shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transform rotate-2">E</span>
         </h1>
       </div>
     </section>
 
+    <script>
+      const avatar = document.getElementById('sage-avatar');
+      let rotation = 0;
+      if (avatar) {
+        avatar.addEventListener('click', () => {
+          rotation += 360;
+          avatar.style.transform = `rotate(${rotation}deg)`;
+        });
+      }
+    </script>
+
     {/* Terminal Section */}
-    <section class="transform hover:-skew-y-1 transition-transform duration-300">
-      <TerminalWindow title="root@sage:~" class="shadow-2xl shadow-red-500/10 border-white/10 !rounded-none border-2">
+    <section class="py-8">
+      <TerminalWindow title="root@sage:~">
         <div class="space-y-6 text-sm md:text-base">
           <div class="space-y-2">
             <div class="flex gap-2 text-zinc-300 font-bold">
@@ -48,17 +61,7 @@ const skills = [
               <span>whoami</span>
             </div>
             <div class="text-zinc-300 pl-4 border-l-2 border-white/5 ml-1">
-              Sage Chen (AI Researcher)
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <div class="flex gap-2 text-zinc-300 font-bold">
-              <span class="text-red-500">root@sage:~$</span>
-              <span>cat ~/fingerprint.txt</span>
-            </div>
-            <div class="text-zinc-400 pl-4 font-mono text-xs sm:text-sm break-all tracking-wider border-l-2 border-white/5 ml-1">
-              6C4F 47D8 A3A8 EB38 5670 172A 6AC1 E2FC FE4A A441
+              SageChen (WENHUI CHEN)
             </div>
           </div>
 
@@ -68,7 +71,7 @@ const skills = [
               <span>check -d 2026 --short</span>
             </div>
             <div class="text-zinc-300 pl-4 border-l-2 border-white/5 ml-1">
-              Development / Learning / Exploring
+              北京邮电大学 / 人工智能 / MCPRL
             </div>
           </div>
 
@@ -101,28 +104,20 @@ const skills = [
         </h2>
         
         <div class="space-y-8 relative before:absolute before:inset-y-0 before:left-[7px] before:w-0.5 before:bg-zinc-800">
-          <div class="relative pl-8">
-            <div class="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-zinc-900 border-2 border-emerald-500 z-10"></div>
-            <div class="space-y-1">
-              <div class="text-zinc-300 font-mono text-sm font-bold">2026 · Now</div>
-              <div class="text-zinc-300 font-medium">Building cool stuff with Astro & React.</div>
-              <p class="text-zinc-500 text-sm">Focusing on performance and UX.</p>
-            </div>
-          </div>
           
           <div class="relative pl-8">
             <div class="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-zinc-900 border-2 border-red-500 z-10"></div>
             <div class="space-y-1">
-              <div class="text-red-500 font-mono text-sm font-bold">2021 - 2025</div>
-              <div class="text-zinc-300 font-medium">BUPT / Computer Science Degree</div>
-              <p class="text-zinc-500 text-sm">Explored Web Dev, CTF, and PWN.</p>
+              <div class="text-red-500 font-mono text-sm font-bold">2022 - now</div>
+              <div class="text-zinc-300 font-medium">BUPT / 人工智能 / 本科</div>
+              <p class="text-zinc-500 text-sm">正在学习人工智能，对LLM、多模态、AI-infra等感兴趣。</p>
             </div>
           </div>
           
           <div class="relative pl-8">
             <div class="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-zinc-900 border-2 border-red-600 z-10"></div>
              <div class="space-y-1">
-              <div class="text-red-400 font-mono text-sm font-bold">Earlier</div>
+              <div class="text-red-400 font-mono text-sm font-bold">2014</div>
               <div class="text-zinc-300 font-medium">Hello World!</div>
               <p class="text-zinc-500 text-sm">Started playing with code.</p>
             </div>
@@ -142,15 +137,15 @@ const skills = [
           <ul class="space-y-4">
             <li class="flex items-start gap-3 text-zinc-400">
               <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500"></span>
-              <span>Developing full-stack applications</span>
+              <span>全栈开发</span>
             </li>
             <li class="flex items-start gap-3 text-zinc-400">
               <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500"></span>
-              <span>Exploring memory safety & security</span>
+              <span>为NAS配置一点小服务，有意思的小工具</span>
             </li>
             <li class="flex items-start gap-3 text-zinc-400">
               <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500"></span>
-              <span>Writing technical articles</span>
+              <span>写点有意思的小文章</span>
             </li>
           </ul>
         </section>

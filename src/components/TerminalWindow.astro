@@ -7,33 +7,54 @@ interface Props {
 const { title = "root@sage:~", class: className } = Astro.props;
 ---
 
-<div class:list={["w-full max-w-3xl mx-auto rounded-xl overflow-hidden bg-zinc-900/90 backdrop-blur-xl border border-white/10 shadow-2xl font-mono text-sm sm:text-base ring-1 ring-white/5", className]}>
-  <div class="bg-white/5 px-4 py-3 flex items-center gap-2 border-b border-white/5">
-    <div class="flex gap-2">
-      <div class="w-3 h-3 rounded-full bg-[#ff5f56] border border-black/10 hover:brightness-110 transition-all"></div>
-      <div class="w-3 h-3 rounded-full bg-[#ffbd2e] border border-black/10 hover:brightness-110 transition-all"></div>
-      <div class="w-3 h-3 rounded-full bg-[#27c93f] border border-black/10 hover:brightness-110 transition-all"></div>
-    </div>
-    {title && <div class="ml-4 text-zinc-400 text-xs select-none font-medium tracking-wide">{title}</div>}
-  </div>
+<div class:list={["w-full max-w-3xl mx-auto relative group", className]}>
+  {/* P5R Decorative Background (Rectangular) */}
+  <div class="absolute inset-0 bg-black border-2 border-zinc-500 translate-x-1 translate-y-1"></div>
   
-  <div class="p-6 text-zinc-300 space-y-4 font-mono leading-relaxed h-[500px] overflow-y-auto custom-scrollbar bg-black/20">
-    <slot />
+  {/* Main Container */}
+  <div class="relative bg-black border-2 border-white overflow-hidden">
+    {/* P5R Header */}
+    <div class="bg-red-600 px-4 py-2 flex items-center justify-between border-b-2 border-white relative overflow-hidden">
+      {/* Texture for Header */}
+      <div class="absolute inset-0 opacity-20 bg-[url('/noise.png')]"></div>
+      {/* Title */}
+      <div class="relative z-10 flex items-center gap-2">
+        <span class="text-black font-black uppercase tracking-widest text-lg" style="font-family: 'Bangers', cursive;">
+          OMNIPOTENT ORB
+        </span>
+        <span class="text-white/80 font-mono text-xs">
+          // {title}
+        </span>
+      </div>
+
+      {/* Stars Decoration */}
+      <div class="flex gap-1">
+        <span class="text-black text-xl animate-pulse">★</span>
+        <span class="text-white text-xl animate-pulse delay-75">★</span>
+        <span class="text-black text-xl animate-pulse delay-150">★</span>
+      </div>
+    </div>
+    {/* Terminal Content */}
+    <div class="p-6 text-zinc-300 space-y-4 font-mono leading-relaxed h-[500px] overflow-y-auto custom-scrollbar bg-zinc-900/50">
+      <slot />
+    </div>
   </div>
 </div>
 
 <style>
+  /* P5R Red Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
+    width: 12px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: #000;
+    border-left: 1px solid #333;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #4b5563;
-    border-radius: 4px;
+    background: #d8000c;
+    border: 2px solid #000;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
+    background: #ff0015;
   }
 </style>

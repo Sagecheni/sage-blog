@@ -7,6 +7,7 @@ export interface Props {
   pubDate?: Date;
   isHome?: boolean;
   showBackground?: boolean;
+  backgroundType?: 'home' | 'blog' | 'none';
 }
 
 import "@fontsource-variable/space-grotesk";
@@ -18,7 +19,18 @@ import Seo from "../components/Seo.astro";
 import Header from "../components/Header.astro";
 import P5RLoader from "../components/P5RLoader.astro";
 import "../styles/global.css";
-const { title, description, author, url, pubDate, isHome = false, showBackground = true } = Astro.props;
+const { title, description, author, url, pubDate, isHome = false, showBackground = true, backgroundType } = Astro.props;
+
+// Determine which background class to use
+let bgClass = "";
+if (backgroundType === 'home') {
+  bgClass = "home-geometry";
+} else if (backgroundType === 'blog') {
+  bgClass = "blog-texture";
+} else if (showBackground) {
+  // Fallback for existing boolean prop
+  bgClass = "home-geometry";
+}
 ---
 
 <!doctype html>
@@ -33,7 +45,7 @@ const { title, description, author, url, pubDate, isHome = false, showBackground
       document.documentElement.classList.add("dark");
     </script>
   </head>
-  <body class:list={["min-h-svh", showBackground ? "home-geometry" : ""]}>
+  <body class:list={["min-h-svh", bgClass]}>
     <P5RLoader />
     <div class="body-margin flex flex-col min-h-svh">
       <Header />

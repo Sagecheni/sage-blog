@@ -6,12 +6,14 @@ import IconRss from "../assets/icons/rss.svg";
 <header
   class="header-margin z-50 flex items-center justify-between"
 >
-  <a
-    href="/"
-    class:list={[
-      "text-xl tracking-wider select-none font-bold italic px-2 py-1 transform -skew-x-12",
-      Astro.url.pathname === "/" ? "bg-accent text-white" : "bg-white text-black",
-    ]}>Sage's Blog</a
+  <a href="/" class="group flex items-center gap-0.5 select-none hover:opacity-90 transition-opacity">
+    <span class="px-3 py-1 bg-accent text-white text-xl font-heading tracking-wider transform -skew-x-12 border-2 border-black group-hover:skew-x-0 transition-transform">
+      SAGE'S
+    </span>
+    <span class="px-3 py-1 bg-black text-white text-xl font-heading tracking-wider transform -skew-x-12 border-2 border-white group-hover:skew-x-0 transition-transform relative z-10 -ml-2 shadow-md">
+      BLOG
+    </span>
+  </a
   >
   <div class="flex items-center justify-center gap-6">
     <Navigation />
