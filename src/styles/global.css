@@ -52,7 +52,7 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
 
-  --font-sans: "Space Grotesk Variable", "LXGW WenKai Screen";
+  --font-sans: "Space Grotesk Variable", "LXGW WenKai GB Screen";
   --font-mono: "IBM Plex Mono";
   --font-heading: "Bangers", "ZCOOL QingKe HuangYou", cursive;
 }

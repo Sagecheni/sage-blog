@@ -14,7 +14,7 @@ import "@fontsource-variable/space-grotesk";
 import "@fontsource/ibm-plex-mono";
 import "@fontsource/bangers";
 import "@fontsource/zcool-qingke-huangyou";
-import "lxgw-wenkai-screen-web";
+import "lxgw-wenkai-screen-web/lxgwwenkaigbscreen/result.css";
 import Seo from "../components/Seo.astro";
 import Header from "../components/Header.astro";
 import P5RLoader from "../components/P5RLoader.astro";
@@ -57,8 +57,11 @@ if (backgroundType === 'home') {
           src={homeBg} 
           alt="Persona 5 Royal Background" 
           class="w-full h-full object-cover"
+          widths={[640, 1024, 1600, homeBg.width]}
+          sizes={`(max-width: 640px) 640px, (max-width: 1024px) 1024px, (max-width: 1600px) 1600px, ${homeBg.width}px`}
           quality="mid"
           loading="eager"
+          fetchpriority="high"
         />
       </div>
     )}
