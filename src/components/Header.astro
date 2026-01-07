@@ -19,9 +19,11 @@ import IconRss from "../assets/icons/rss.svg";
     <Navigation />
 
     <div class="flex items-center justify-center gap-4">
-      <a href="/rss.xml" aria-label="rss" title="rss"
-        ><IconRss class="active-foreground size-5" /></a
-      >
+      <a href="/rss.xml" aria-label="rss" title="RSS" class="group relative flex items-center justify-center w-10 h-10">
+         <!-- Star Container -->
+        <div class="absolute inset-0 bg-black rotate-45 group-hover:rotate-180 transition-transform duration-500 border-2 border-gray-200 group-hover:border-black group-hover:bg-accent shadow-[2px_2px_0px_rgba(0,0,0,1)]"></div>
+        <IconRss class="relative z-10 w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+      </a>
     </div>
   </div>
 </header>

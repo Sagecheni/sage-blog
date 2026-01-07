@@ -1,19 +1,54 @@
 ---
 ---
 
-<div class="flex flex-col items-center justify-center py-24 sm:py-32">
-  <h1
-    class="text-foreground animate-fade-in text-center text-6xl font-extrabold tracking-wide sm:text-7xl md:text-8xl lg:text-9xl"
-  >
-    <span class="bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent pl-4 inline-block hover:scale-105 transition-transform duration-300 cursor-default">
-      Ars longa,
-    </span>
-    <br />
-    <span class="text-accent/90 inline-block hover:scale-105 transition-transform duration-300 cursor-default">vita brevis.</span>
-  </h1>
-  <p
-    class="text-foreground/60 animate-fade-in-up mt-8 max-w-lg text-center text-lg font-light tracking-wide sm:text-xl"
-  >
-    Crafting digital experiences with code.
-  </p>
+<div class="relative w-full max-w-7xl mx-auto py-32 sm:py-48 px-4 overflow-visible cursor-default select-none pointer-events-none sm:pointer-events-auto">
+  <!-- P5R Style Decorative Background Elements -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] opacity-10 pointer-events-none z-0">
+     <!-- Slight background noise or shapes could go here -->
+  </div>
+
+  <div class="relative z-10 flex flex-col w-full pointer-events-auto">
+    
+    <!-- First Line: Ars longa -->
+    <!-- Skewed container for the first part -->
+    <div class="self-start sm:ml-12 md:ml-32 transition-all duration-300 hover:z-30 group relative">
+      <h1 class="font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black italic tracking-wide transform -rotate-2 origin-bottom-left transition-transform duration-300 group-hover:-skew-x-12 group-hover:scale-105 group-hover:-rotate-3 group-hover:-translate-x-4">
+        <!-- Inner wrapper for color flip -->
+        <span class="relative inline-block px-6 py-2 transition-colors duration-200 group-hover:text-white dark:group-hover:text-black">
+            <!-- Text -->
+          <span class="relative z-10 text-foreground group-hover:text-white dark:group-hover:text-black transition-colors duration-200">Ars longa,</span>
+          <!-- Background Slash/Shape on Hover -->
+          <span class="absolute inset-0 bg-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left -z-0 -skew-x-12 shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]"></span>
+        </span>
+      </h1>
+       <!-- Decorative star/sparkle that appears on hover -->
+       <span class="absolute -top-4 -left-4 text-4xl text-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rotate-12">★</span>
+    </div>
+
+
+
+    <!-- Second Line: vita brevis -->
+    <div class="self-end mt-8 sm:mr-12 md:mr-32 transition-all duration-300 hover:z-30 group relative">
+       <h1 class="font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black italic tracking-wide transform rotate-2 origin-top-right transition-transform duration-300 group-hover:skew-x-12 group-hover:scale-105 group-hover:rotate-3 group-hover:translate-x-4">
+        <span class="relative inline-block px-6 py-2 transition-colors duration-200">
+             <!-- Text: Inverted default state if desired, or just normal -->
+           <span class="relative z-10 text-accent group-hover:text-black group-hover:bg-white dark:group-hover:bg-foreground px-2 shadow-[2px_2px_0px_var(--color-foreground)] transition-all duration-200">vita brevis.</span>
+        </span>
+      </h1>
+    </div>
+
+  </div>
+
+  <!-- Subtitle: Calling Card Style -->
+  <div class="absolute bottom-0 left-4 sm:left-auto sm:right-24 max-w-xs sm:max-w-md text-left sm:text-right transform rotate-1 pointer-events-auto">
+    <div class="font-hand text-lg sm:text-xl md:text-2xl font-bold text-foreground/90 bg-background/90 backdrop-blur-sm p-4 border-2 border-foreground shadow-[4px_4px_0px_var(--color-accent)] animate-fade-in-up hover:-translate-y-1 hover:shadow-[6px_6px_0px_var(--color-accent)] transition-all duration-300">
+      <p>
+        Crafting digital experiences with <span class="text-accent font-black">Code</span> & <span class="text-accent font-black">Heart</span>.
+      </p>
+      <!-- "Take Your Heart" logo stylized placeholder -->
+      <div class="absolute -bottom-3 -right-3 w-8 h-8 bg-accent border-2 border-black rounded-full flex items-center justify-center text-white text-xs z-10">
+          ★
+      </div>
+    </div>
+  </div>
 </div>

@@ -1,29 +1,65 @@
 ---
-
 ---
 
-<nav class="flex items-center justify-center gap-2 font-mono text-sm sm:gap-4">
+<nav class="flex items-center justify-center gap-4 font-heading text-lg tracking-wider">
+  <!-- Home Link -->
   <a
     href="/"
     class:list={[
-      "navigation animation px-2 py-1 font-bold -skew-x-12",
-      Astro.url.pathname === "/" ? "bg-accent text-white" : "text-foreground hover:bg-white hover:text-black",
-    ]}>首页</a
-  >
-  <span class="text-muted-foreground">/</span>
+      "relative px-6 py-1 -skew-x-12 border-2 border-black transition-all duration-200 group overflow-hidden hover:-translate-y-1 hover:shadow-[4px_4px_0px_var(--color-accent)]",
+      Astro.url.pathname === "/" 
+        ? "bg-accent text-white shadow-[4px_4px_0px_#000]" 
+        : "bg-white text-black"
+    ]}>
+    {/* Background for Hover State (Only for inactive) */}
+    <div class:list={[
+        "absolute inset-0 bg-accent translate-y-full group-hover:translate-y-0 transition-transform duration-200 z-0",
+        Astro.url.pathname === "/" ? "hidden" : "block"
+    ]}></div>
+    
+    {/* Text Layer */}
+    <span class:list={[
+        "relative z-10 skew-x-12 block transition-colors duration-200 font-bold",
+        /* If active: always white. If inactive: black, turns white on hover */
+        Astro.url.pathname === "/" ? "text-white" : "text-black group-hover:text-white"
+    ]}>首页</span>
+  </a>
+
+  <!-- Blog Link -->
   <a
     href="/blog"
     class:list={[
-      "navigation animation px-2 py-1 font-bold -skew-x-12",
-      Astro.url.pathname.startsWith("/blog") ? "bg-accent text-white" : "text-foreground hover:bg-white hover:text-black",
-    ]}>博客</a
-  >
-  <span class="text-muted-foreground">/</span>
+      "relative px-6 py-1 -skew-x-12 border-2 border-black transition-all duration-200 group overflow-hidden hover:-translate-y-1 hover:shadow-[4px_4px_0px_var(--color-accent)]",
+      Astro.url.pathname.startsWith("/blog")
+        ? "bg-accent text-white shadow-[4px_4px_0px_#000]" 
+        : "bg-white text-black"
+    ]}>
+    <div class:list={[
+        "absolute inset-0 bg-accent translate-y-full group-hover:translate-y-0 transition-transform duration-200 z-0",
+        Astro.url.pathname.startsWith("/blog") ? "hidden" : "block"
+    ]}></div>
+    <span class:list={[
+        "relative z-10 skew-x-12 block transition-colors duration-200 font-bold",
+        Astro.url.pathname.startsWith("/blog") ? "text-white" : "text-black group-hover:text-white"
+    ]}>博客</span>
+  </a>
+
+  <!-- About Link -->
   <a
     href="/about"
     class:list={[
-      "navigation animation px-2 py-1 font-bold -skew-x-12",
-      Astro.url.pathname.startsWith("/about") ? "bg-accent text-white" : "text-foreground hover:bg-white hover:text-black",
-    ]}>关于</a
-  >
+      "relative px-6 py-1 -skew-x-12 border-2 border-black transition-all duration-200 group overflow-hidden hover:-translate-y-1 hover:shadow-[4px_4px_0px_var(--color-accent)]",
+      Astro.url.pathname.startsWith("/about")
+        ? "bg-accent text-white shadow-[4px_4px_0px_#000]" 
+        : "bg-white text-black"
+    ]}>
+    <div class:list={[
+        "absolute inset-0 bg-accent translate-y-full group-hover:translate-y-0 transition-transform duration-200 z-0",
+        Astro.url.pathname.startsWith("/about") ? "hidden" : "block"
+    ]}></div>
+    <span class:list={[
+        "relative z-10 skew-x-12 block transition-colors duration-200 font-bold",
+        Astro.url.pathname.startsWith("/about") ? "text-white" : "text-black group-hover:text-white"
+    ]}>关于</span>
+  </a>
 </nav>
