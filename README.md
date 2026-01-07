@@ -1,6 +1,6 @@
-# Sage-Blog (P5R 主题博客)
+# SageForge (P5R 主题博客)
 
-Sage-Blog 是一个基于 [Astro](https://astro.build) 构建的个人博客，采用了深受 **女神异闻录 5 皇家版 (Persona 5 Royal)** 启发的独特美学风格。它将现代 Web 技术与独特的“朋克爵士”视觉风格完美融合。
+SageForge|贤者工坊是一个基于 [Astro](https://astro.build) 构建的个人博客，采用了深受 **女神异闻录 5 皇家版 (Persona 5 Royal)** 启发的独特美学风格。它将现代 Web 技术与独特的“朋克爵士”视觉风格完美融合。
 
 ## 🎭 特性 (Features)
 

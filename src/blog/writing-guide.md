@@ -127,6 +127,10 @@ bibliography: public/bibliography.bib
 :::caution
 这是一个**危险**警告块。
 :::
+
+:::cite
+这是一个**引用**块。
+:::
 ```
 
 **效果：**
@@ -149,6 +153,20 @@ bibliography: public/bibliography.bib
 
 :::caution
 这是一个**危险**警告块。
+:::
+
+:::cite
+这是一个**引用**块（中文正体）。
+:::
+
+:::cite{.en}
+Stay hungry, stay foolish. (English Italic)
+:::
+
+:::cite{.bi}
+知行合一。
+
+Knowledge and action are one.
 :::
 
 ---
@@ -183,7 +201,67 @@ graph TD;
 
 
 
-## 5. 总结
+
+## 5. 文本特效 (Text Effects)
+
+使用 `:directive[text]` 语法为文本添加颜色、高亮或特殊效果。
+
+### 5.1 基础颜色
+
+支持 `:color[text]` 格式。
+
+```markdown
+- :red[红色文字] (`:red[...]`)
+- :blue[蓝色文字] (`:blue[...]`)
+- :green[绿色文字] (`:green[...]`)
+- :yellow[黄色文字] (`:yellow[...]`)
+- :purple[紫色文字] (`:purple[...]`)
+- :orange[橙色文字] (`:orange[...]`)
+- :pink[粉色文字] (`:pink[...]`)
+- :gray[灰色文字] (`:gray[...]`)
+```
+
+
+**效果：**
+
+- :red[红色文字]
+- :blue[蓝色文字]
+- :green[绿色文字]
+- :yellow[黄色文字]
+- :purple[紫色文字]
+- :orange[橙色文字]
+- :pink[粉色文字]
+- :gray[灰色文字]
+
+### 5.2 特殊效果
+
+```markdown
+- **彩虹特效**：`:rainbow[这是一段彩虹文字]` 
+- **发光效果**：`:glow[发光文字]`
+- **模糊效果**：`:blur[模糊文字]`
+- **防剧透**：`:spoiler[剧透警告！鼠标悬停查看]` (默认模糊，悬停显示)
+- **高亮**：`:highlight[高亮背景]`
+```
+
+**效果：**
+
+- **彩虹特效**：:rainbow[这是一段彩虹文字]
+- **发光效果**：:glow[发光文字]
+- **模糊效果**：:blur[模糊文字]
+- **防剧透**：:spoiler[剧透警告！鼠标悬停查看] (默认模糊，悬停显示)
+- **高亮**：:highlight[高亮背景]
+
+### 5.3 字体样式
+
+- **手写体**：`:font-hand[Using handwritten font style]`
+
+**效果：**
+
+- **手写体**：:font-hand[Using handwritten font style]
+
+---
+
+## 6. 总结
 
 | 插件 | 用途 | 场景 |
 | :--- | :--- | :--- |
@@ -192,7 +270,7 @@ graph TD;
 | `remark-directive`| Callouts | 提示、警告、旁注 |
 | `mermaid` | 流程图 | 架构设计、逻辑梳理 |
 
-## 6.参考文献
+## 7. 参考文献
 
 [^ref]
 

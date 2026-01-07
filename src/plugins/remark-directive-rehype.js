@@ -1,5 +1,4 @@
 import { visit } from "unist-util-visit";
-import { h } from "hastscript";
 
 /** @type {import('unified').Plugin<[], import('mdast').Root>} */
 export function remarkDirectiveHandle() {
@@ -31,9 +30,10 @@ export function remarkDirectiveHandle() {
         } else {
           // containerDirective or leafDirective
           data.hName = "div";
+          const { class: attrClass, ...rest } = attributes;
           data.hProperties = {
-            class: `callout ${name}`,
-            ...attributes,
+            class: `callout ${name}${attrClass ? " " + attrClass : ""}`,
+            ...rest,
           };
           
           // Inject a title if it's a callout-like directive and not already present
