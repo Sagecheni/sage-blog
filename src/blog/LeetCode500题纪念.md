@@ -17,4 +17,9 @@ tags: [里程碑]
 
 ![每日一题209记录](https://sageblog-1316665129.cos.ap-guangzhou.myqcloud.com/img/%E6%AF%8F%E6%97%A5%E4%B8%80%E9%A2%98209%E8%AE%B0%E5%BD%95.png)
 
+还有个好消息是,LC周赛打上Knight了,真是可喜可贺可喜可贺.
+
+来个总览
+![LC记录总览](https://sageblog-1316665129.cos.ap-guangzhou.myqcloud.com/img/LC%E8%AE%B0%E5%BD%95%E6%80%BB%E8%A7%88.png)
+
 继续加油💪.3月返校就要开始找实习了,真是艰难.
