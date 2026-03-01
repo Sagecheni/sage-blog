@@ -23,3 +23,5 @@ tags: [里程碑]
 ![LC记录总览](https://sageblog-1316665129.cos.ap-guangzhou.myqcloud.com/img/LC%E8%AE%B0%E5%BD%95%E6%80%BB%E8%A7%88.png)
 
 继续加油💪.3月返校就要开始找实习了,真是艰难.
+
+PS:过了几天后,由于受不了C++的复杂语法,决定将天赋带到Python.
