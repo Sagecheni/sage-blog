@@ -3,7 +3,19 @@ import IconGithub from "../assets/icons/brand-github.svg";
 ---
 
 <div class="flex items-center justify-center space-x-6 pb-8">
-  <a href="https://github.com/Sagecheni" target="blank" aria-label="gitbub"
-    ><IconGithub class="socials" /></a
+  <a
+    href="https://github.com/Sagecheni"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="GitHub profile"
+    class="group relative flex h-10 w-10 items-center justify-center"
   >
+    <div
+      class="border-foreground/30 bg-background group-hover:bg-accent absolute inset-0 rotate-45 border-2 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] group-hover:rotate-180 group-hover:border-black group-hover:shadow-[2px_2px_0px_var(--color-accent)]"
+    >
+    </div>
+    <IconGithub
+      class="socials relative z-10 transition-transform duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] group-hover:scale-110"
+    />
+  </a>
 </div>

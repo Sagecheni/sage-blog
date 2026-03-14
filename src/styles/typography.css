@@ -68,7 +68,7 @@
 
   /* socials */
   .socials {
-    @apply hover:stroke-accent size-8 stroke-1;
+    @apply stroke-foreground group-hover:stroke-background size-8 stroke-1;
   }
 
   /* divider */

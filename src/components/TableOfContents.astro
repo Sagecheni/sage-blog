@@ -2,23 +2,27 @@
 const { headings } = Astro.props;
 
 // 只收录 h2/h3（你也可以放开到 h4）
-const toc = (headings ?? []).filter((h: { depth: number; }) => h.depth >= 2 && h.depth <= 3);
+const toc = (headings ?? []).filter(
+  (h: { depth: number }) => h.depth >= 2 && h.depth <= 3,
+);
 ---
 
-{toc.length > 0 && (
-  <nav aria-label="Table of contents" class="toc">
-    <p class="toc-title">文章目录</p>
-    <ol class="toc-list">
-      {toc.map((h: { depth: any; slug: unknown; text: unknown; }) => (
-        <li class={`toc-item depth-${h.depth}`}>
-          <a class="toc-link" href={`#${h.slug}`} data-toc-link={h.slug}>
-            {h.text}
-          </a>
-        </li>
-      ))}
-    </ol>
-  </nav>
-)}
+{
+  toc.length > 0 && (
+    <nav aria-label="Table of contents" class="toc">
+      <p class="toc-title">文章目录</p>
+      <ol class="toc-list">
+        {toc.map((h: { depth: any; slug: unknown; text: unknown }) => (
+          <li class={`toc-item depth-${h.depth}`}>
+            <a class="toc-link" href={`#${h.slug}`} data-toc-link={h.slug}>
+              {h.text}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
 
 <script>
   const observer = new IntersectionObserver(
@@ -36,7 +40,7 @@ const toc = (headings ?? []).filter((h: { depth: number; }) => h.depth >= 2 && h
         }
       });
     },
-    { rootMargin: "0px 0px -80% 0px" } // Highlight when heading is near top
+    { rootMargin: "0px 0px -80% 0px" }, // Highlight when heading is near top
   );
 
   // Track all headings that are in the TOC
@@ -46,10 +50,93 @@ const toc = (headings ?? []).filter((h: { depth: number; }) => h.depth >= 2 && h
 </script>
 
 <style>
-  .toc-title { font-weight: 600; margin-bottom: .5rem; }
-  .toc-list { list-style: none; padding: 0; margin: 0; }
-  .toc-item.depth-3 { padding-left: 1rem; }
-  .toc-link { display: block; padding: .25rem 0; text-decoration: none; transition: all 0.2s; color: var(--foreground); opacity: 0.7; }
-  .toc-link:hover { opacity: 1; color: var(--accent); }
-  .toc-link.is-active { font-weight: 600; opacity: 1; color: var(--accent); }
+  .toc {
+    position: relative;
+    padding-left: 0.75rem; /* Space for accent bar */
+  }
+  .toc-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+  }
+
+  /* Accent bar that slides to active item */
+  .toc-list::before {
+    content: "";
+    position: absolute;
+    left: -0.75rem;
+    top: 0;
+    width: 3px;
+    height: 2rem; /* Approximate height of one item */
+    background-color: var(--accent);
+    transition: transform var(--motion-duration-normal)
+      var(--motion-ease-emphasized);
+    transform-origin: top;
+  }
+
+  .toc-item {
+    position: relative;
+  }
+  .toc-item.depth-3 {
+    padding-left: 1rem;
+  }
+
+  .toc-link {
+    display: block;
+    padding: 0.25rem 0;
+    text-decoration: none;
+    transition-property: transform, opacity, color;
+    transition-duration: var(--motion-duration-fast);
+    transition-timing-function: var(--motion-ease-standard);
+    color: var(--foreground);
+    opacity: 0.7;
+  }
+  .toc-link:hover {
+    opacity: 1;
+    color: var(--accent);
+    transform: translateX(4px);
+  }
+  .toc-link.is-active {
+    font-weight: 600;
+    opacity: 1;
+    color: var(--accent);
+    transform: translateX(4px) scale(1.05);
+  }
+
+  /* Calculate bar position based on active item index */
+  .toc-list:has(.toc-item:nth-child(1) .toc-link.is-active)::before {
+    transform: translateY(0);
+  }
+  .toc-list:has(.toc-item:nth-child(2) .toc-link.is-active)::before {
+    transform: translateY(2rem);
+  }
+  .toc-list:has(.toc-item:nth-child(3) .toc-link.is-active)::before {
+    transform: translateY(4rem);
+  }
+  .toc-list:has(.toc-item:nth-child(4) .toc-link.is-active)::before {
+    transform: translateY(6rem);
+  }
+  .toc-list:has(.toc-item:nth-child(5) .toc-link.is-active)::before {
+    transform: translateY(8rem);
+  }
+  .toc-list:has(.toc-item:nth-child(6) .toc-link.is-active)::before {
+    transform: translateY(10rem);
+  }
+  .toc-list:has(.toc-item:nth-child(7) .toc-link.is-active)::before {
+    transform: translateY(12rem);
+  }
+  .toc-list:has(.toc-item:nth-child(8) .toc-link.is-active)::before {
+    transform: translateY(14rem);
+  }
+  .toc-list:has(.toc-item:nth-child(9) .toc-link.is-active)::before {
+    transform: translateY(16rem);
+  }
+  .toc-list:has(.toc-item:nth-child(10) .toc-link.is-active)::before {
+    transform: translateY(18rem);
+  }
 </style>

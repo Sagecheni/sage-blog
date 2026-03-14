@@ -41,7 +41,7 @@ sudo apt-get update && sudo apt-get install cloudflare-warp -y
 ```
 
 1. **注册并配置 WARP 为 SOCKS5 代理模式：**
-*这是关键步骤，我们要让 WARP 监听本地的一个端口（比如 1080），把流量通过 WARP 隧道发出去。*
+这是关键步骤，我们要让 WARP 监听本地的一个端口（比如 1080），把流量通过 WARP 隧道发出去。
 
 ```bash
 

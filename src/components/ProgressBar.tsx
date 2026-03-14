@@ -18,8 +18,11 @@ export default function ScrollProgressBar() {
   return (
     <div className="fixed top-0 left-0 z-3 w-full">
       <div
-        className="bg-accent h-1 transition-[width] duration-0 ease-linear"
-        style={{ width: `${scrollPercent}%` }}
+        className="bg-accent h-1 transition-[width] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)]"
+        style={{
+          width: `${scrollPercent}%`,
+          transitionDuration: "var(--motion-duration-fast)",
+        }}
       ></div>
     </div>
   );

@@ -14,9 +14,16 @@ import CopyButton from "../components/CopyButton";
 >
   <div class="mt-2 space-y-1">
     <div class="flex gap-8">
-      <div class="flex gap-2">
-        <IconCalendarWeek class="size-5 stroke-1" />
-        <p class="font-mono text-base opacity-90">
+      <!-- Date -->
+      <div
+        class="group flex items-center gap-2 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:-translate-y-0.5"
+      >
+        <IconCalendarWeek
+          class="stroke-foreground group-hover:stroke-accent size-5 stroke-1 transition-colors duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)]"
+        />
+        <p
+          class="font-mono text-base opacity-90 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] group-hover:font-semibold group-hover:opacity-100"
+        >
           {
             frontmatter.date
               .toLocaleDateString("en-GB", {
@@ -28,25 +35,37 @@ import CopyButton from "../components/CopyButton";
           }
         </p>
       </div>
-      <div class="flex gap-2">
-        <IconClockHour3 class="size-5 translate-y-0.25 stroke-1" />
-        <p class="font-mono text-base opacity-90">{readTime} min read</p>
+
+      <!-- Read time -->
+      <div
+        class="group flex items-center gap-2 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:-translate-y-0.5"
+      >
+        <IconClockHour3
+          class="stroke-foreground group-hover:stroke-accent size-5 translate-y-0.25 stroke-1 transition-colors duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)]"
+        />
+        <p
+          class="font-mono text-base opacity-90 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] group-hover:font-semibold group-hover:opacity-100"
+        >
+          {readTime} min read
+        </p>
       </div>
     </div>
-    <div class="group flex items-center gap-2">
+
+    <!-- Tags -->
+    <div
+      class="group flex items-center gap-2 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:-translate-y-0.5"
+    >
       <IconTag
-        class="fill-background stroke-foreground group-hover:fill-foreground group-hover:stroke-background size-5 stroke-1"
+        class="fill-background stroke-foreground group-hover:fill-accent group-hover:stroke-background size-5 stroke-1 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)]"
       />
       <div class="space-x-2">
-          {
-            frontmatter.tags.map((tag: string) => (
-              <span
-                class="text-base opacity-90"
-              >
-                {tag}
-              </span>
-            ))
-          }
+        {
+          frontmatter.tags.map((tag: string) => (
+            <span class="text-base opacity-90 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] group-hover:font-semibold group-hover:opacity-100">
+              {tag}
+            </span>
+          ))
+        }
       </div>
     </div>
   </div>
