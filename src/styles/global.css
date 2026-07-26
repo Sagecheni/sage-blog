@@ -528,6 +528,73 @@ button:focus-visible {
   font-size: 0.8em; /* Reset label size */
 }
 
+/* GALLERY (:::gallery) —— 游记多图画廊。
+   指令透传：{cols=N} 变成 cols 属性，{.masonry} 追加 class，均无插件改动 */
+.callout.gallery {
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.callout.gallery figure {
+  margin: 0;
+}
+
+/* 统一裁切成 3:2，网格齐整；点击 zoom 看完整原图 */
+.callout.gallery img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+.callout.gallery figcaption {
+  font-size: 0.8rem;
+}
+
+/* 画廊中的文字段落横跨整行 —— 支持照片间穿插解说 */
+.callout.gallery > *:not(figure) {
+  grid-column: 1 / -1;
+}
+
+/* 指定列数：:::gallery{cols=2..4} */
+.callout.gallery[cols="2"] {
+  grid-template-columns: repeat(2, 1fr);
+}
+.callout.gallery[cols="3"] {
+  grid-template-columns: repeat(3, 1fr);
+}
+.callout.gallery[cols="4"] {
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (max-width: 640px) {
+  .callout.gallery[cols="3"],
+  .callout.gallery[cols="4"] {
+    /* 窄屏回落 2 列 */
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 瀑布流变体：:::gallery{.masonry} —— 保留原始比例不裁切，列优先排布 */
+.callout.gallery.masonry {
+  display: block;
+  columns: 3 220px;
+  column-gap: 0.75rem;
+}
+.callout.gallery.masonry figure {
+  margin: 0 0 0.75rem;
+  break-inside: avoid;
+}
+.callout.gallery.masonry img {
+  aspect-ratio: auto;
+  height: auto;
+  object-fit: unset;
+}
+
 /* Citations Bubble (Custom Directive :citen) */
 .citation {
   color: var(--accent);

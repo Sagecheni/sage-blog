@@ -1,15 +1,30 @@
 import { visit } from "unist-util-visit";
+import { optimizedImageDomains } from "../data/image-domains.mjs";
 
 /**
  * Rehype plugin to wrap Markdown images in a <figure> element.
  * Structure:
  * <figure class="group">
- *   <a href="{src}" target="_blank" rel="noopener">
- *     <img loading="lazy" src="{src}" alt="{alt}" />
+ *   <a href="{src}" target="_blank" rel="noopener">   ← 仅绝对地址（https:// 或 /）才包链接
+ *     <img loading="lazy" decoding="async" src="{src}" alt="{alt}" />
  *     <figcaption>图 {count}：{alt}</figcaption>
  *   </a>
  * </figure>
+ *
+ * 为什么相对路径不包 <a>：本插件先于 Astro 的 rehypeImages 执行，
+ * <img src> 随后会被改写为 /_astro/hash 而 <a href> 保留原始字符串 ——
+ * 对 "./x.jpg" 这类相对路径，href 会按页面路径解析而 404。
  */
+
+/** 命中授权优化域（image.domains）的远程图 —— 有优化副本，不链接原图 */
+function isOptimizedRemote(src) {
+  if (!/^https?:\/\//.test(src)) return false;
+  try {
+    return optimizedImageDomains.includes(new URL(src).hostname);
+  } catch {
+    return false;
+  }
+}
 export function rehypeImageFigure() {
   return (tree) => {
     let count = 1;
@@ -29,42 +44,56 @@ export function rehypeImageFigure() {
       const { src, alt, title } = node.properties || {};
       const currentCount = count++;
 
+      const imgNode = {
+        ...node,
+        properties: {
+          ...node.properties,
+          loading: "lazy",
+          decoding: "async",
+        },
+      };
+
+      const captionNode = {
+        type: "element",
+        tagName: "figcaption",
+        properties: {},
+        children: [
+          {
+            type: "text",
+            value: `图 ${currentCount}：${alt || title || ""}`,
+          },
+        ],
+      };
+
+      // 绝对地址（远程图 / public 路径）才有稳定可链接的原图；
+      // 但授权优化域（COS）除外 —— 产物里已有全尺寸优化副本，
+      // 不再链接原图：原图保留 EXIF/GPS，站点上不该出现它的 URL
+      const isLinkable =
+        typeof src === "string" &&
+        /^(https?:\/\/|\/)/.test(src) &&
+        !isOptimizedRemote(src);
+
+      const figureChildren = isLinkable
+        ? [
+            {
+              type: "element",
+              tagName: "a",
+              properties: {
+                href: src,
+                target: "_blank",
+                rel: "noopener",
+              },
+              children: [imgNode, captionNode],
+            },
+          ]
+        : [imgNode, captionNode];
+
       // Construct the new node structure
       const figureNode = {
         type: "element",
         tagName: "figure",
         properties: { className: ["group"] },
-        children: [
-          {
-            type: "element",
-            tagName: "a",
-            properties: {
-              href: src,
-              target: "_blank",
-              rel: "noopener",
-            },
-            children: [
-              {
-                ...node,
-                properties: {
-                  ...node.properties,
-                  loading: "lazy",
-                },
-              },
-              {
-                type: "element",
-                tagName: "figcaption",
-                properties: {},
-                children: [
-                  {
-                    type: "text",
-                    value: `图 ${currentCount}：${alt || title || ""}`,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+        children: figureChildren,
       };
 
       // Check if the image is the sole child of a <p> tag

@@ -230,9 +230,9 @@
       @apply pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 p-3 text-center text-lg text-white/86 opacity-0 transition-all duration-150 ease-in-out group-hover:opacity-100 sm:text-xl md:text-2xl lg:text-3xl;
     }
 
-    /* media */
+    /* media —— max-w-full/h-auto：超宽原图不许溢出正文列 */
     img {
-      @apply border-border border-2 transition-all duration-150 ease-in-out group-hover:brightness-75;
+      @apply border-border h-auto max-w-full border-2 transition-all duration-150 ease-in-out group-hover:brightness-75;
     }
     iframe {
       @apply border-border my-8 border-2 select-none;

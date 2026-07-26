@@ -19,6 +19,17 @@
     images.forEach((img) => {
       img.style.cursor = "zoom-in";
 
+      // 放大时切到 srcset 里最大的优化副本（全尺寸、无 EXIF、走 Pages）——
+      // 刻意不用 COS 原图：原图保留 EXIF/GPS，站点不该引用它
+      const largest = (img.srcset || "")
+        .split(",")
+        .map((entry) => entry.trim().split(/\s+/))
+        .filter((parts) => parts[0])
+        .sort((a, b) => (parseInt(b[1]) || 0) - (parseInt(a[1]) || 0))[0];
+      if (largest) {
+        img.dataset.zoomSrc = largest[0];
+      }
+
       const link = img.closest("a");
       link?.addEventListener("click", (event: MouseEvent) => {
         // 保留「新标签打开原图」的能力
