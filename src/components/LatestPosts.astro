@@ -23,7 +23,12 @@ const posts = published.slice(0, limit).map((blog) => ({
     posts.map((post) => (
       <a href={`/blog/${post.slug}`} class="latest-post-row">
         <span class="bloom" aria-hidden="true" />
-        <h3 class="post-title m-0 text-base">{post.title}</h3>
+        <h3
+          class="post-title m-0 text-base"
+          transition:name={`post-title-${post.slug}`}
+        >
+          {post.title}
+        </h3>
         <span class="post-date font-mono whitespace-nowrap">
           <time datetime={post.date.toISOString()}>
             {post.date.toLocaleDateString("en-GB", {

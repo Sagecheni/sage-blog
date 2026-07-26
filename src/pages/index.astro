@@ -6,6 +6,18 @@ import ProfileCard from "../components/ProfileCard.astro";
 import LatestPosts from "../components/LatestPosts.astro";
 import IconGithub from "../assets/icons/brand-github.svg";
 import IconRss from "../assets/icons/rss.svg";
+import { site } from "../data/site";
+
+// 首页的 WebSite 结构化数据（文章页的 BlogPosting 在 Seo.astro）
+const websiteLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: site.title,
+  url: site.url,
+  description: site.description,
+  author: { "@type": "Person", name: site.author },
+  inLanguage: "zh-CN",
+}).replace(/</g, "\\u003c");
 
 const socials = [
   { label: "GitHub", href: "https://github.com/Sagecheni", icon: IconGithub },
@@ -21,6 +33,7 @@ const socials = [
   backgroundType="hero"
   opening={true}
 >
+  <script type="application/ld+json" set:html={websiteLd} />
   <Hero />
 
   <div class="mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-4 py-8">

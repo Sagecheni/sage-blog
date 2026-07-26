@@ -12,6 +12,11 @@ export default defineEcConfig({
   useDarkModeMediaQuery: false,
 
   styleOverrides: {
+    // 与站内 --font-mono 对齐 —— 否则代码块用系统等宽，行内代码用
+    // IBM Plex Mono，同一页两种代码字体
+    codeFontFamily: "'IBM Plex Mono', ui-monospace, monospace",
+    uiFontFamily: "'IBM Plex Mono', ui-monospace, monospace",
+
     // P5R：直角 + 硬阴影，与站内 .card 同一套语言
     borderRadius: "0",
     borderWidth: "2px",
