@@ -1,11 +1,110 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { footprints } from "../data/footprints";
+import { getPublishedBlogs } from "../data/blog";
 
-// 底图是 1600×800 的完整等距圆柱投影（经度 -180..180，纬度 -90..90），
-// 经纬度 → 百分比是纯线性映射
-const xOf = (lng: number) => ((lng + 180) / 360) * 100;
-const yOf = (lat: number) => ((90 - lat) / 180) * 100;
+// ── 两套视图的经纬度 → 百分比线性映射 ──
+// 世界：完整等距圆柱投影（1600×800，经 -180..180 / 纬 -90..90）
+// 中国：同源裁切（1400×813，经 73..135 / 纬 18..54）
+const CHINA = { lngMin: 73, lngMax: 135, latMin: 18, latMax: 54 };
+
+const worldX = (lng: number) => ((lng + 180) / 360) * 100;
+const worldY = (lat: number) => ((90 - lat) / 180) * 100;
+const chinaX = (lng: number) =>
+  ((lng - CHINA.lngMin) / (CHINA.lngMax - CHINA.lngMin)) * 100;
+const chinaY = (lat: number) =>
+  ((CHINA.latMax - lat) / (CHINA.latMax - CHINA.latMin)) * 100;
+const inChina = (fp: { lat: number; lng: number }) =>
+  fp.lng >= CHINA.lngMin &&
+  fp.lng <= CHINA.lngMax &&
+  fp.lat >= CHINA.latMin &&
+  fp.lat <= CHINA.latMax;
+
+// ── 游记标题解析（slug 写错会产出坏链接 → 构建期死链检查直接失败，故意的）──
+const blogs = await getPublishedBlogs();
+const titleOf = new Map(blogs.map((b) => [b.data.slug, b.data.title]));
+
+// ── 统计 ──
+const visited = footprints.filter((fp) => !fp.planned);
+const planned = footprints.filter((fp) => fp.planned);
+
+// 最远足迹：以北京为原点的球面距离
+const HOME = { lat: 39.9042, lng: 116.4074 };
+function distanceKm(a: { lat: number; lng: number }) {
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const dLat = rad(a.lat - HOME.lat);
+  const dLng = rad(a.lng - HOME.lng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(HOME.lat)) * Math.cos(rad(a.lat)) * Math.sin(dLng / 2) ** 2;
+  return Math.round(6371 * 2 * Math.asin(Math.sqrt(h)));
+}
+const farthest = visited
+  .map((fp) => ({ fp, km: distanceKm(fp) }))
+  .sort((a, b) => b.km - a.km)[0];
+
+// ── 旅行路线：同 trip 的点按数组顺序连线（每个视图分别算像素坐标）──
+const trips = new Map<string, typeof footprints>();
+for (const fp of footprints) {
+  if (!fp.trip) continue;
+  if (!trips.has(fp.trip)) trips.set(fp.trip, []);
+  trips.get(fp.trip)!.push(fp);
+}
+const worldRoutes = [...trips.values()]
+  .filter((points) => points.length >= 2)
+  .map((points) =>
+    points
+      .map(
+        (p) =>
+          `${(worldX(p.lng) * 16).toFixed(1)},${(worldY(p.lat) * 8).toFixed(1)}`,
+      )
+      .join(" "),
+  );
+const chinaRoutes = [...trips.values()]
+  .map((points) => points.filter(inChina))
+  .filter((points) => points.length >= 2)
+  .map((points) =>
+    points
+      .map(
+        (p) =>
+          `${(chinaX(p.lng) * 14).toFixed(1)},${(chinaY(p.lat) * 8.13).toFixed(1)}`,
+      )
+      .join(" "),
+  );
+
+// 默认视图：境内有点显中国，否则世界
+const defaultView = footprints.some(inChina) ? "china" : "world";
+
+const views = [
+  {
+    id: "china",
+    label: "中国",
+    src: "/china-map.webp",
+    width: 1400,
+    height: 813,
+    viewBox: "0 0 1400 813",
+    routes: chinaRoutes,
+    dots: footprints.filter(inChina).map((fp) => ({
+      fp,
+      x: chinaX(fp.lng),
+      y: chinaY(fp.lat),
+    })),
+  },
+  {
+    id: "world",
+    label: "世界",
+    src: "/world-map.webp",
+    width: 1600,
+    height: 800,
+    viewBox: "0 0 1600 800",
+    routes: worldRoutes,
+    dots: footprints.map((fp) => ({
+      fp,
+      x: worldX(fp.lng),
+      y: worldY(fp.lat),
+    })),
+  },
+];
 ---
 
 <BaseLayout
@@ -20,95 +119,216 @@ const yOf = (lat: number) => ((90 - lat) / 180) * 100;
       <p class="blog-hero-hand font-hand" aria-hidden="true">
         {footprints.length} 个地方，慢慢多起来
       </p>
+
+      {/* 统计行 */}
+      <p
+        class="text-foreground-secondary mt-4 font-mono text-xs tracking-widest"
+      >
+        去过 <span class="text-accent font-bold">{visited.length}</span> 地 · 想去
+        <span class="text-accent font-bold">{planned.length}</span> 地{
+          farthest && farthest.km > 0 && (
+            <>
+              {" "}
+              · 最远抵达{" "}
+              <span class="text-accent font-bold">{farthest.fp.place}</span>（
+              {farthest.km} km）
+            </>
+          )
+        }
+      </p>
+
+      {/* 视图切换 */}
+      <div
+        class="mt-5 flex items-center justify-center gap-2"
+        role="group"
+        aria-label="地图视图"
+      >
+        {
+          views.map((view) => (
+            <button
+              type="button"
+              class:list={[
+                "fp-toggle -skew-x-12 border-2 px-4 py-1 text-sm font-bold transition-colors",
+                view.id === defaultView && "is-active",
+              ]}
+              data-view-btn={view.id}
+              aria-pressed={view.id === defaultView ? "true" : "false"}
+            >
+              <span class="block skew-x-12">{view.label}</span>
+            </button>
+          ))
+        }
+      </div>
     </header>
 
-    {/* 地图 */}
-    <div
-      class="footprints-map card landing-section relative overflow-hidden p-0"
-    >
-      <img
-        src="/world-map.webp"
-        alt="世界地图"
-        width="1600"
-        height="800"
-        class="block h-auto w-full select-none"
-        loading="eager"
-        decoding="async"
-      />
-      {
-        footprints.map((fp) => {
-          const style = `left:${xOf(fp.lng).toFixed(2)}%;top:${yOf(fp.lat).toFixed(2)}%;`;
-          const label = `${fp.place} · ${fp.date}`;
-          return fp.slug ? (
-            <a
-              href={`/blog/${fp.slug}`}
-              class="fp-dot"
-              style={style}
-              aria-label={label}
+    {/* 地图（两套视图，切换显隐） */}
+    {
+      views.map((view) => (
+        <div
+          class:list={[
+            "fp-view footprints-map card landing-section relative overflow-hidden p-0",
+            view.id !== defaultView && "hidden",
+          ]}
+          data-view={view.id}
+        >
+          <img
+            src={view.src}
+            alt={`${view.label}地图`}
+            width={view.width}
+            height={view.height}
+            class="block h-auto w-full select-none"
+            loading={view.id === defaultView ? "eager" : "lazy"}
+            decoding="async"
+          />
+
+          {/* 旅行路线 */}
+          {view.routes.length > 0 && (
+            <svg
+              class="pointer-events-none absolute inset-0 h-full w-full"
+              viewBox={view.viewBox}
+              preserveAspectRatio="none"
+              aria-hidden="true"
             >
-              <span class="fp-pulse" aria-hidden="true" />
-              <span class="fp-tip">{label}</span>
-            </a>
-          ) : (
-            <span class="fp-dot" style={style} aria-label={label} tabindex="0">
-              <span class="fp-pulse" aria-hidden="true" />
-              <span class="fp-tip">{label}</span>
-            </span>
-          );
-        })
+              {view.routes.map((points) => (
+                <polyline
+                  points={points}
+                  fill="none"
+                  stroke="var(--accent)"
+                  stroke-width="2.5"
+                  stroke-dasharray="7 5"
+                  opacity="0.55"
+                />
+              ))}
+            </svg>
+          )}
+
+          {/* 地点 */}
+          {view.dots.map(({ fp, x, y }) => {
+            const style = `left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;`;
+            const label = `${fp.place} · ${fp.date}`;
+            const href = fp.posts?.[0] ? `/blog/${fp.posts[0]}` : null;
+            return href ? (
+              <a
+                href={href}
+                class:list={["fp-dot", fp.planned && "planned"]}
+                style={style}
+                aria-label={label}
+              >
+                {!fp.planned && <span class="fp-pulse" aria-hidden="true" />}
+                <span class="fp-tip">{label}</span>
+              </a>
+            ) : (
+              <span
+                class:list={["fp-dot", fp.planned && "planned"]}
+                style={style}
+                aria-label={label}
+                tabindex="0"
+              >
+                {!fp.planned && <span class="fp-pulse" aria-hidden="true" />}
+                <span class="fp-tip">{label}</span>
+              </span>
+            );
+          })}
+        </div>
+      ))
+    }
+
+    {/* 图例 */}
+    <div
+      class="text-foreground-secondary mt-3 flex items-center justify-center gap-6 font-mono text-xs"
+      aria-hidden="true"
+    >
+      <span class="flex items-center gap-2">
+        <span
+          class="bg-accent border-background inline-block h-2.5 w-2.5 rotate-45 border"
+        ></span> 去过
+      </span>
+      <span class="flex items-center gap-2">
+        <span class="border-accent inline-block h-2.5 w-2.5 rotate-45 border-2"
+        ></span> 想去
+      </span>
+      {
+        trips.size > 0 && (
+          <span class="flex items-center gap-2">
+            <span
+              class="inline-block h-0 w-6 border-t-2 border-dashed"
+              style="border-color: var(--accent);"
+            />
+            旅行路线
+          </span>
+        )
       }
     </div>
 
-    {/* 列表（移动端地图点太小，这里保底） */}
+    {/* 列表 */}
     <ul
       class="landing-section m-0 mt-6 grid list-none grid-cols-1 gap-3 p-0 delay-100 sm:grid-cols-2 lg:grid-cols-3"
     >
       {
         footprints.map((fp) => (
           <li>
-            {fp.slug ? (
-              <a href={`/blog/${fp.slug}`} class="card group block p-4">
-                <span class="card-notch" aria-hidden="true" />
-                <span class="font-heading group-hover:text-accent text-lg tracking-wide transition-colors">
-                  {fp.place}
-                </span>
+            <div class="card group relative overflow-hidden p-0">
+              <span class="card-notch" aria-hidden="true" />
+              {fp.photo && (
+                <img
+                  src={fp.photo}
+                  alt={fp.place}
+                  class="h-28 w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+              <div class="p-4">
+                <div class="flex items-baseline justify-between gap-2">
+                  <span class="font-heading text-lg tracking-wide">
+                    {fp.place}
+                  </span>
+                  {fp.planned && (
+                    <span class="border-accent text-accent -skew-x-12 border px-1.5 py-0.5 text-xs font-bold">
+                      <span class="block skew-x-12">想去</span>
+                    </span>
+                  )}
+                </div>
                 <span class="text-foreground-secondary mt-1 block font-mono text-xs">
                   {fp.date}
+                  {fp.trip && <> · {fp.trip}</>}
                 </span>
                 {fp.note && (
                   <span class="text-foreground-secondary mt-1 block text-sm">
                     {fp.note}
                   </span>
                 )}
-              </a>
-            ) : (
-              <div class="card p-4">
-                <span class="card-notch" aria-hidden="true" />
-                <span class="font-heading text-lg tracking-wide">
-                  {fp.place}
-                </span>
-                <span class="text-foreground-secondary mt-1 block font-mono text-xs">
-                  {fp.date}
-                </span>
-                {fp.note && (
-                  <span class="text-foreground-secondary mt-1 block text-sm">
-                    {fp.note}
+                {fp.posts && fp.posts.length > 0 && (
+                  <span class="mt-2 flex flex-col gap-1">
+                    {fp.posts.map((slug) => (
+                      <a
+                        href={`/blog/${slug}`}
+                        class="text-accent text-sm hover:underline"
+                      >
+                        → {titleOf.get(slug) ?? slug}
+                      </a>
+                    ))}
                   </span>
                 )}
               </div>
-            )}
+            </div>
           </li>
         ))
       }
     </ul>
 
     <p class="text-foreground-secondary/60 mt-8 text-center font-mono text-xs">
-      底图：<a
-        href="https://commons.wikimedia.org/wiki/File:World_location_map_(equirectangular_180).svg"
+      底图构建期自渲染 · 世界：<a
+        href="https://www.naturalearthdata.com/"
         target="_blank"
         rel="noopener noreferrer"
-        class="hover:text-accent underline">TUBS / Wikimedia Commons</a
-      >（CC BY-SA 3.0，灰度栅格化）
+        class="hover:text-accent underline">Natural Earth</a
+      >（公有领域，无国界剪影）· 中国：<a
+        href="https://datav.aliyun.com/portal/school/atlas/area_selector"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hover:text-accent underline">DataV.GeoAtlas</a
+      >（高德标准画法）
     </p>
   </div>
 </BaseLayout>
@@ -117,6 +337,24 @@ const yOf = (lat: number) => ((90 - lat) / 180) * 100;
   /* 暗色主题反相底图：白海变黑海 */
   :global(html.dark) .footprints-map img {
     filter: invert(1) brightness(0.8);
+  }
+
+  /* 切换钮：状态全部收进 CSS —— 拆开写 Tailwind hover 类会在
+     「激活 + 悬停」时红字撞红底隐形 */
+  .fp-toggle {
+    border-color: var(--border);
+  }
+
+  .fp-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .fp-toggle.is-active,
+  .fp-toggle.is-active:hover {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
   }
 
   /* 容器不旋转（提示框才不歪），菱形交给 ::before */
@@ -135,6 +373,12 @@ const yOf = (lat: number) => ((90 - lat) / 180) * 100;
     background-color: var(--accent);
     border: 2px solid var(--background);
     transform: rotate(45deg);
+  }
+
+  /* 想去：空心点 */
+  .fp-dot.planned::before {
+    background-color: transparent;
+    border: 2px solid var(--accent);
   }
 
   .fp-pulse {
@@ -172,6 +416,7 @@ const yOf = (lat: number) => ((90 - lat) / 180) * 100;
     opacity: 0;
     pointer-events: none;
     transition: opacity 150ms var(--motion-ease-standard);
+    z-index: 5;
   }
 
   .fp-dot:hover .fp-tip,
@@ -185,3 +430,30 @@ const yOf = (lat: number) => ((90 - lat) / 180) * 100;
     }
   }
 </style>
+
+<script>
+  // 世界 ⇄ 中国 视图切换（每页元素重绑，dataset 守卫防重入）
+  function initFootprints() {
+    const buttons = document.querySelectorAll<HTMLElement>("[data-view-btn]");
+    if (!buttons.length) return;
+    if (buttons[0].dataset.bound === "true") return;
+    buttons[0].dataset.bound = "true";
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.viewBtn;
+        document.querySelectorAll<HTMLElement>(".fp-view").forEach((view) => {
+          view.classList.toggle("hidden", view.dataset.view !== target);
+        });
+        buttons.forEach((other) => {
+          const active = other === btn;
+          other.classList.toggle("is-active", active);
+          other.setAttribute("aria-pressed", String(active));
+        });
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initFootprints);
+  document.addEventListener("astro:page-load", initFootprints);
+</script>
