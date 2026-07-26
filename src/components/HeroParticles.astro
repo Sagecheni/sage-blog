@@ -123,6 +123,11 @@
     }
 
     function frame() {
+      // 换页后画布已卸下，循环自行终止（防止旧页面的 rAF 永续累积）
+      if (!host!.isConnected) {
+        running = false;
+        return;
+      }
       draw(backCtx!, backShards, true);
       draw(frontCtx!, frontShards, false);
       raf = requestAnimationFrame(frame);
@@ -142,7 +147,14 @@
     resize();
     start();
 
-    window.addEventListener("resize", resize, { passive: true });
+    window.addEventListener(
+      "resize",
+      () => {
+        // 换页后旧监听引用的画布已卸下，直接空转
+        if (host!.isConnected) resize();
+      },
+      { passive: true },
+    );
 
     // Hero 滚出视口 / 标签页隐藏时停掉 rAF
     const observer = new IntersectionObserver(
@@ -151,9 +163,11 @@
     );
     observer.observe(host);
 
-    document.addEventListener("visibilitychange", () =>
-      document.hidden ? stop() : start(),
-    );
+    document.addEventListener("visibilitychange", () => {
+      if (!host!.isConnected) return;
+      if (document.hidden) stop();
+      else start();
+    });
   }
 
   document.addEventListener("DOMContentLoaded", initHeroParticles);

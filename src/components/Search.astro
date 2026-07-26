@@ -125,53 +125,93 @@
     search: (query: string) => Promise<{ results: PagefindResult[] }>;
   };
 
+  // ── 模块级状态：跨 ClientRouter 换页存活（模块只执行一次）──
+  // pagefind 实例缓存住，换页后不重新下载索引
+  let pagefind: Pagefind | null = null;
+  let loadFailed = false;
+  let activeIndex = -1;
+  let debounceTimer = 0;
+
+  // 元素全部实时查询 —— 换页后 body 是新的，闭包捕获旧元素会失效
+  const getOverlay = () => document.getElementById("search-overlay");
+  const getInput = () =>
+    document.getElementById("search-input") as HTMLInputElement | null;
+  const getStatus = () => document.getElementById("search-status");
+  const getList = () => document.getElementById("search-results");
+
+  async function loadPagefind(): Promise<Pagefind | null> {
+    if (pagefind || loadFailed) return pagefind;
+    try {
+      // 索引产物只存在于构建后的 dist。路径必须是变量 ——
+      // 字符串字面量会被 Rollup 静态解析并因不存在而构建失败，
+      // @vite-ignore 只拦 Vite 不拦 Rollup
+      const indexUrl = "/pagefind/pagefind.js";
+      pagefind = (await import(/* @vite-ignore */ indexUrl)) as Pagefind;
+      pagefind.init?.();
+    } catch {
+      loadFailed = true;
+      const status = getStatus();
+      if (status)
+        status.textContent =
+          "本地 dev 没有搜索索引 —— 跑 npm run build && npm run preview 后可用";
+    }
+    return pagefind;
+  }
+
+  function setOpen(open: boolean) {
+    const overlay = getOverlay();
+    const input = getInput();
+    if (!overlay || !input) return;
+    overlay.classList.toggle("is-open", open);
+    document.documentElement.style.overflow = open ? "hidden" : "";
+    if (open) {
+      input.focus();
+      input.select();
+      loadPagefind();
+    }
+  }
+
+  const isOpen = () => getOverlay()?.classList.contains("is-open") ?? false;
+
+  // ── 全局快捷键：document 监听只注册一次（document 跨换页存活）──
+  document.addEventListener("keydown", (event: KeyboardEvent) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      setOpen(!isOpen());
+      return;
+    }
+    if (event.key === "Escape" && isOpen()) {
+      setOpen(false);
+      return;
+    }
+    // 斜杠唤起：焦点在输入类控件里时不劫持
+    const target = event.target as HTMLElement | null;
+    const typing =
+      target &&
+      (target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable);
+    if (event.key === "/" && !typing && !isOpen()) {
+      event.preventDefault();
+      setOpen(true);
+    }
+  });
+
+  // ── 每页绑定：换页后元素全新，重绑（dataset 守卫防同页重入）──
   function initSearch() {
-    const overlay = document.getElementById("search-overlay");
-    const input = document.getElementById(
-      "search-input",
-    ) as HTMLInputElement | null;
-    const status = document.getElementById("search-status");
-    const list = document.getElementById("search-results");
+    const overlay = getOverlay();
+    const input = getInput();
+    const status = getStatus();
+    const list = getList();
     if (!overlay || !input || !status || !list) return;
     if (overlay.dataset.bound === "true") return;
     overlay.dataset.bound = "true";
 
-    let pagefind: Pagefind | null = null;
-    let loadFailed = false;
-    let activeIndex = -1;
-    let debounceTimer = 0;
-
-    async function loadPagefind(): Promise<Pagefind | null> {
-      if (pagefind || loadFailed) return pagefind;
-      try {
-        // 索引产物只存在于构建后的 dist。路径必须是变量 ——
-        // 字符串字面量会被 Rollup 静态解析并因不存在而构建失败，
-        // @vite-ignore 只拦 Vite 不拦 Rollup
-        const indexUrl = "/pagefind/pagefind.js";
-        pagefind = (await import(/* @vite-ignore */ indexUrl)) as Pagefind;
-        pagefind.init?.();
-      } catch {
-        loadFailed = true;
-        status!.textContent =
-          "本地 dev 没有搜索索引 —— 跑 npm run build && npm run preview 后可用";
-      }
-      return pagefind;
-    }
-
-    function setOpen(open: boolean) {
-      overlay!.classList.toggle("is-open", open);
-      document.documentElement.style.overflow = open ? "hidden" : "";
-      if (open) {
-        input!.focus();
-        input!.select();
-        loadPagefind();
-      }
-    }
-
-    const isOpen = () => overlay!.classList.contains("is-open");
+    // 新页面的结果列表是空的，重置选中态
+    activeIndex = -1;
 
     function setActive(index: number) {
-      const hits = [...list!.querySelectorAll<HTMLElement>(".search-hit")];
+      const hits = [...list.querySelectorAll<HTMLElement>(".search-hit")];
       if (!hits.length) return;
       activeIndex = (index + hits.length) % hits.length;
       hits.forEach((hit, i) => {
@@ -182,11 +222,11 @@
     }
 
     async function runSearch() {
-      const query = input!.value.trim();
+      const query = input.value.trim();
       if (!query) {
-        list!.innerHTML = "";
+        list.innerHTML = "";
         activeIndex = -1;
-        if (!loadFailed) status!.textContent = "输入关键词开始搜索";
+        if (!loadFailed) status.textContent = "输入关键词开始搜索";
         return;
       }
 
@@ -199,17 +239,17 @@
       );
 
       // 输入可能在 await 期间变了，丢弃过期结果
-      if (input!.value.trim() !== query) return;
+      if (input.value.trim() !== query) return;
 
-      list!.innerHTML = "";
+      list.innerHTML = "";
       activeIndex = -1;
 
       if (!top.length) {
-        status!.textContent = `没有找到「${query}」相关的内容`;
+        status.textContent = `没有找到「${query}」相关的内容`;
         return;
       }
 
-      status!.textContent = `${res.results.length} 条结果`;
+      status.textContent = `${res.results.length} 条结果`;
 
       for (const hit of top) {
         const li = document.createElement("li");
@@ -226,7 +266,7 @@
         excerpt.innerHTML = hit.excerpt;
         a.append(title, excerpt);
         li.append(a);
-        list!.append(li);
+        list.append(li);
       }
 
       setActive(0);
@@ -245,48 +285,25 @@
         event.preventDefault();
         setActive(activeIndex - 1);
       } else if (event.key === "Enter") {
-        const active = list!.querySelector<HTMLAnchorElement>(
+        const active = list.querySelector<HTMLAnchorElement>(
           ".search-hit.is-active",
         );
-        if (active) window.location.href = active.href;
+        if (active) active.click();
       }
     });
 
-    // 打开入口：导航按钮 + Cmd/Ctrl+K + 斜杠
+    // 导航按钮（在 SiteNav 里，换页后也是新元素）
     document.getElementById("search-open")?.addEventListener("click", () => {
       setOpen(true);
-    });
-
-    document.addEventListener("keydown", (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setOpen(!isOpen());
-        return;
-      }
-      if (event.key === "Escape" && isOpen()) {
-        setOpen(false);
-        return;
-      }
-      // 斜杠唤起：焦点在输入类控件里时不劫持
-      const target = event.target as HTMLElement | null;
-      const typing =
-        target &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable);
-      if (event.key === "/" && !typing && !isOpen()) {
-        event.preventDefault();
-        setOpen(true);
-      }
     });
 
     document.getElementById("search-close")?.addEventListener("click", () => {
       setOpen(false);
     });
 
-    // 点结果导航前先解锁滚动（MPA 整页跳转）
+    // 点结果后关闭弹层并解锁滚动（ClientRouter 接管跳转，不再整页刷新）
     list.addEventListener("click", () => {
-      document.documentElement.style.overflow = "";
+      setOpen(false);
     });
 
     // 点遮罩空白处关闭

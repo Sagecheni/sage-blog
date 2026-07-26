@@ -246,17 +246,19 @@ button:focus-visible {
   }
 }
 
-/* THEME TRANSITION */
-::view-transition-old(root),
-::view-transition-new(root) {
+/* THEME TRANSITION —— 只在 ThemeToggle 的圆形揭示期间生效（html.theme-vt 由它临时打上）。
+   不能全局写死 animation:none：ClientRouter 的换页过渡也走 ::view-transition，
+   无作用域会把默认的换页淡入淡出一起干掉 */
+html.theme-vt::view-transition-old(root),
+html.theme-vt::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
 
-::view-transition-old(root) {
+html.theme-vt::view-transition-old(root) {
   z-index: var(--z-old);
 }
-::view-transition-new(root) {
+html.theme-vt::view-transition-new(root) {
   z-index: var(--z-new);
 }
 
@@ -593,6 +595,252 @@ button:focus-visible {
   aspect-ratio: auto;
   height: auto;
   object-fit: unset;
+}
+
+/* TIMELINE (:::timeline) —— 行程/演进时间线。内容写成无序列表，
+   每项以 **加粗** 开头作节点标题。与画廊同一套指令透传，零插件改动 */
+.callout.timeline {
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.callout.timeline > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0 0.25rem 1.5rem;
+  border-left: 3px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.callout.timeline li {
+  position: relative;
+  padding-left: 0.25rem;
+}
+
+/* 菱形节点，压在竖线上 */
+.callout.timeline li::before {
+  content: "";
+  position: absolute;
+  top: 0.45em;
+  left: calc(-1.5rem - 0.35rem - 1.5px);
+  width: 0.7rem;
+  height: 0.7rem;
+  background-color: var(--accent);
+  border: 2px solid var(--background);
+  transform: rotate(45deg);
+}
+
+/* 节点标题：列表项开头的加粗 */
+.callout.timeline li > strong:first-child,
+.callout.timeline li > p:first-child > strong:first-child {
+  font-family: var(--font-heading);
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  margin-right: 0.35rem;
+}
+
+.callout.timeline li > p {
+  margin-block: 0.25rem;
+}
+
+/* ==========================================================================
+   FOOTNOTE POPOVER —— 悬停脚注标号浮出内容（FootnotePreview.astro 注入）
+   ========================================================================== */
+.footnote-pop {
+  position: absolute;
+  z-index: 65;
+  max-width: min(360px, calc(100vw - 2rem));
+  padding: 0.6rem 0.9rem;
+  border: 2px solid var(--accent);
+  background-color: var(--surface);
+  box-shadow: 4px 4px 0 var(--border);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--foreground);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms var(--motion-ease-standard);
+}
+
+.footnote-pop.is-visible {
+  opacity: 1;
+}
+
+.footnote-pop p {
+  margin: 0;
+}
+
+/* ==========================================================================
+   HEADING ANCHOR —— 悬停 h2/h3 浮现 #，点击复制小节直链
+   ========================================================================== */
+.heading-anchor {
+  margin-left: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.6em;
+  vertical-align: middle;
+  color: var(--foreground-secondary);
+  opacity: 0;
+  transition:
+    opacity 150ms var(--motion-ease-standard),
+    color 150ms var(--motion-ease-standard);
+}
+
+.markdown h2:hover .heading-anchor,
+.markdown h3:hover .heading-anchor,
+.heading-anchor:focus-visible,
+.heading-anchor.is-copied {
+  opacity: 1;
+}
+
+.heading-anchor:hover,
+.heading-anchor.is-copied {
+  color: var(--accent);
+}
+
+/* ==========================================================================
+   LINK CARD (::linkcard{url=...}) —— 构建期抓取 og 元数据的链接卡片
+   ========================================================================== */
+.link-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-block: 1.5rem;
+  padding: 0.9rem 1.1rem;
+  border: 2px solid var(--border);
+  background-color: var(--surface);
+  text-decoration: none;
+  /* 盖掉 .markdown a 的渐变下划线动效与 accent 色 */
+  background-image: none;
+  color: inherit;
+  transition:
+    border-color 200ms var(--motion-ease-standard),
+    transform 200ms var(--motion-ease-standard);
+}
+
+.link-card:hover {
+  border-color: var(--accent);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--accent);
+}
+
+.link-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  color: var(--foreground);
+}
+
+.link-card-desc {
+  font-size: 0.85rem;
+  color: var(--foreground-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.link-card-host {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+}
+
+/* VIDEO EMBED (::bilibili / ::youtube) —— 16:9 响应式懒加载播放器 */
+.video-embed {
+  margin-block: 1.5rem;
+  aspect-ratio: 16 / 9;
+  border: 2px solid var(--border);
+  background-color: var(--surface-deep);
+  box-shadow: 4px 4px 0 var(--accent);
+}
+
+.video-embed iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* ==========================================================================
+   SKIP LINK —— 键盘用户跳过导航直达正文，聚焦时才浮现
+   ========================================================================== */
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  background-color: var(--accent);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  letter-spacing: 0.08em;
+  border: 2px solid var(--foreground);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   BACK TO TOP —— 滚过约一屏半后浮现（BackToTop.astro 控制 .is-visible）
+   ========================================================================== */
+#back-to-top {
+  position: fixed;
+  right: 1rem;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 2px solid var(--foreground);
+  background-color: var(--accent);
+  color: #ffffff;
+  box-shadow: 3px 3px 0 var(--foreground);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition:
+    opacity 200ms var(--motion-ease-standard),
+    transform 200ms var(--ease-pop);
+}
+
+#back-to-top.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+#back-to-top:hover {
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   PRINT —— 文章打印/存 PDF：黑白单栏，只留正文
+   ========================================================================== */
+@media print {
+  body,
+  .page-texture {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+  }
+
+  .markdown a {
+    color: #000000;
+    background-image: none;
+  }
+
+  .callout {
+    box-shadow: none;
+  }
 }
 
 /* Citations Bubble (Custom Directive :citen) */

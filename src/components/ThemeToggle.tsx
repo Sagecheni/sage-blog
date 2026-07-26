@@ -38,10 +38,19 @@ export default function ThemeToggle() {
   const toggleTheme = (event: React.MouseEvent<HTMLButtonElement>) => {
     const newTheme = theme === "dark" ? "light" : "dark";
 
+    // theme-vt 临时作用域：让 global.css 里的主题过渡规则只在此期间生效，
+    // 不影响 ClientRouter 的换页过渡
+    const root = document.documentElement;
+    root.classList.add("theme-vt");
+
     const transition = (document as any).startViewTransition?.(() =>
       changeTheme(newTheme),
     );
-    if (!transition) return changeTheme(newTheme);
+    if (!transition) {
+      root.classList.remove("theme-vt");
+      return changeTheme(newTheme);
+    }
+    transition.finished.finally(() => root.classList.remove("theme-vt"));
 
     const x = event.clientX;
     const y = event.clientY;

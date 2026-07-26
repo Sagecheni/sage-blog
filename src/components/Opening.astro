@@ -379,6 +379,11 @@
     const root = document.getElementById("opening-animation");
     if (!root) return;
 
+    // ClientRouter 下首次加载 DOMContentLoaded 和 astro:page-load 都会触发：
+    // 第一次启动动画并写入"已播放"，第二次若只看 sessionStorage 会把
+    // 正在播的动画当成"已播过"直接移除 —— 同一节点已启动就不再处理
+    if (root.dataset.started === "true") return;
+
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -390,6 +395,7 @@
       return;
     }
 
+    root.dataset.started = "true";
     sessionStorage.setItem("opening-played", "true");
     // 动画期间锁滚动
     document.documentElement.style.overflow = "hidden";

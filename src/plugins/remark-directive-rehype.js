@@ -9,6 +9,10 @@ export function remarkDirectiveHandle() {
         node.type === "leafDirective" ||
         node.type === "textDirective"
       ) {
+        // 上游专用插件（如 remark-link-card）已经处理过的指令不再碰，
+        // 否则这里的通用规则会把它们覆盖成 callout div
+        if (node.data?.hName) return;
+
         const data = node.data || (node.data = {});
         const attributes = node.attributes || {};
         const name = node.name;

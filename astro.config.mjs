@@ -6,6 +6,8 @@ import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import { remarkLinkCard } from "./src/plugins/remark-link-card.mjs";
+import { remarkVideoEmbed } from "./src/plugins/remark-video-embed.mjs";
 import { rehypeImageFigure } from "./src/plugins/rehype-image-figure.mjs";
 import { rehypeTableWrap } from "./src/plugins/rehype-table-wrap.mjs";
 import { optimizedImageDomains } from "./src/data/image-domains.mjs";
@@ -39,7 +41,15 @@ export default defineConfig({
   },
 
   markdown: {
-    remarkPlugins: [remarkMath, remarkDirective, remarkDirectiveHandle],
+    // remarkLinkCard 必须在 remarkDirectiveHandle 之前消费掉 ::linkcard，
+    // 否则会被通用规则吃成 callout div
+    remarkPlugins: [
+      remarkMath,
+      remarkDirective,
+      remarkLinkCard,
+      remarkVideoEmbed,
+      remarkDirectiveHandle,
+    ],
     rehypePlugins: [
       rehypeKatex,
       rehypeImageFigure,
@@ -66,7 +76,9 @@ export default defineConfig({
 
   prefetch: {
     prefetchAll: true,
-    // defaultStrategy: "load",
+    // viewport：链接一进视口就预取 HTML（默认 hover 要等悬停）——
+    // 滚到「下一篇」卡片时页面已在后台取好，配合 ClientRouter 点击即换
+    defaultStrategy: "viewport",
   },
 
   output: "static",

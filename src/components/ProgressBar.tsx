@@ -19,7 +19,7 @@ export default function ScrollProgressBar() {
   // z-[60] 压在 z-50 的固定导航之上 —— 原来是 z-3，被导航盖住，
   // 只有下滑收起导航时才短暂可见
   return (
-    <div className="fixed top-0 left-0 z-[60] w-full">
+    <div className="fixed top-0 left-0 z-[60] w-full print:hidden">
       <div
         className="bg-accent h-1 transition-[width] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)]"
         style={{

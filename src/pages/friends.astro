@@ -1,0 +1,71 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { friends } from "../data/friends";
+
+// 与 Tag.astro 同一套按名哈希，让每张友链卡的倾斜角/配色稳定又不整齐划一
+const hashOf = (name: string) =>
+  [...name].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+const rotations = ["rotate-1", "-rotate-1", "rotate-0", "-rotate-2"];
+---
+
+<BaseLayout
+  title="友链｜贤者工坊"
+  description="朋友们的博客"
+  author="SageChen"
+  url="https://blog.sagec.fun/friends"
+>
+  <div class="mx-auto w-full max-w-[1280px] px-4 py-6 md:px-8">
+    <header class="blog-hero">
+      <h1 class="blog-hero-title font-heading">FRIENDS</h1>
+      <p class="blog-hero-hand font-hand" aria-hidden="true">
+        他们的博客也很好看
+      </p>
+    </header>
+
+    <div
+      class="landing-section mx-auto grid max-w-3xl grid-cols-1 gap-5 sm:grid-cols-2"
+    >
+      {
+        friends.map((friend) => {
+          const rotation = rotations[hashOf(friend.name) % rotations.length];
+          return (
+            <a
+              href={friend.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class:list={[
+                "card group block p-5 transition-transform hover:rotate-0",
+                rotation,
+              ]}
+            >
+              <span class="card-notch" aria-hidden="true" />
+              <span class="font-heading group-hover:text-accent block text-xl tracking-wide transition-colors">
+                {friend.name}
+              </span>
+              <span class="text-foreground-secondary mt-1.5 block text-sm">
+                {friend.desc}
+              </span>
+              <span class="text-accent mt-3 block font-mono text-xs tracking-wider">
+                {new URL(friend.url).hostname}
+              </span>
+            </a>
+          );
+        })
+      }
+
+      {/* 交换友链邀请卡 */}
+      <div class="card border-dashed p-5">
+        <span
+          class="font-heading text-foreground-secondary block text-xl tracking-wide"
+        >
+          + 交换友链
+        </span>
+        <span class="text-foreground-secondary mt-1.5 block text-sm">
+          想交换友链？到<a href="/about" class="text-accent hover:underline"
+            >关于页</a
+          >找到我的联系方式，附上你的站点名称、链接和一句话介绍。
+        </span>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

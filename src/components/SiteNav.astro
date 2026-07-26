@@ -10,6 +10,11 @@ const links = [
   { href: "/", label: "首页", match: (p: string) => p === "/" },
   { href: "/blog", label: "博客", match: (p: string) => p.startsWith("/blog") },
   {
+    href: "/friends",
+    label: "友链",
+    match: (p: string) => p.startsWith("/friends"),
+  },
+  {
     href: "/about",
     label: "关于",
     match: (p: string) => p.startsWith("/about"),
@@ -18,7 +23,7 @@ const links = [
 ---
 
 <nav
-  class="header-nav border-border bg-background fixed top-0 right-0 left-0 z-50 w-full border-b-2 transition-transform duration-300 ease-in-out"
+  class="header-nav border-border bg-background fixed top-0 right-0 left-0 z-50 w-full border-b-2 transition-transform duration-300 ease-in-out print:hidden"
   data-open="false"
   data-scroll-direction="up"
 >
@@ -128,6 +133,28 @@ const links = [
 <div class="h-[var(--nav-height)]" aria-hidden="true"></div>
 
 <script>
+  // 下滑收起 / 上滑露出。window 监听只在模块加载时注册一次
+  // （模块跨 ClientRouter 换页存活），处理函数实时查询当前 nav，
+  // 不闭包捕获元素 —— 否则每次换页都会累积一个引用旧 DOM 的死监听
+  let lastY = 0;
+  window.addEventListener(
+    "scroll",
+    () => {
+      const nav = document.querySelector<HTMLElement>(".header-nav");
+      if (!nav || nav.dataset.open === "true") return;
+      const y = window.scrollY;
+      // 顶部一小段始终显示，避免抖动
+      if (y < 80) {
+        nav.dataset.scrollDirection = "up";
+      } else if (Math.abs(y - lastY) > 6) {
+        nav.dataset.scrollDirection = y > lastY ? "down" : "up";
+      }
+      lastY = y;
+    },
+    { passive: true },
+  );
+
+  // 元素级绑定：换页后是全新元素，每页重绑（dataset 守卫防同页重入）
   function initNav() {
     const nav = document.querySelector<HTMLElement>(".header-nav");
     const toggle = document.getElementById("nav-toggle");
@@ -155,24 +182,6 @@ const links = [
       iconOpen?.classList.toggle("hidden", open);
       iconClose?.classList.toggle("hidden", !open);
     });
-
-    // 下滑收起 / 上滑露出；菜单展开时不收
-    let lastY = window.scrollY;
-    window.addEventListener(
-      "scroll",
-      () => {
-        const y = window.scrollY;
-        if (nav.dataset.open === "true") return;
-        // 顶部一小段始终显示，避免抖动
-        if (y < 80) {
-          nav.dataset.scrollDirection = "up";
-        } else if (Math.abs(y - lastY) > 6) {
-          nav.dataset.scrollDirection = y > lastY ? "down" : "up";
-        }
-        lastY = y;
-      },
-      { passive: true },
-    );
   }
 
   document.addEventListener("DOMContentLoaded", initNav);

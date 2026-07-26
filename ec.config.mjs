@@ -1,8 +1,9 @@
 import { defineEcConfig } from "astro-expressive-code";
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
+import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 
 export default defineEcConfig({
-  plugins: [pluginLineNumbers()],
+  plugins: [pluginLineNumbers(), pluginCollapsibleSections()],
 
   themes: ["github-dark", "github-light-high-contrast"],
   // 绑定到站点自己的 .dark / .light 类，而不是系统媒体查询 ——

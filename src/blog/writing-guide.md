@@ -368,7 +368,117 @@ node scripts/strip-exif.mjs ~/Desktop/游记照片 --max 4000
 **EXIF 隐私边界**：站点上出现的全部是剥离过 EXIF 的优化副本，原图 URL 不会出现在页面上；但**原图本身仍在 COS 上公有可读**，知道 URL 就能拿到含 GPS 的元数据 —— 所以 6.1 的清洗一步不可省。
 :::
 
-## 7. 总结
+## 7. 系列连载 (Series)
+
+多篇文章组成连载（游记、专题系列）时，在 frontmatter 里声明同一个 `series` 名即可自动串联：
+
+```yaml
+---
+slug: "japan-trip-1"
+title: "日本游记 · 第一天"
+series: "日本游记"
+---
+```
+
+效果与规则：
+
+- 同名 `series` 的文章自动归为一个系列，**篇序按发布日期升序**（连载按时间写，无需手工排序字段）
+- 每篇文章的标题下方会出现系列导航卡：「连载 · 日本游记 · 第 N / M 篇」+ 全部篇目列表，当前篇高亮，其余可直接跳转
+- 相关文章推荐会自动排除同系列成员（系列卡已覆盖它们）
+
+另外：文章头部的标签贴纸可点击，会跳到博客列表页并带上对应筛选（`/blog?tag=xxx`）；列表页的筛选状态也会同步到地址栏，可以直接分享带筛选的链接。
+
+## 8. 富内容组件
+
+### 8.1 时间线（:::timeline）
+
+行程、演进史用时间线排版。内容写成**无序列表**，每项以加粗开头作节点标题：
+
+```markdown
+:::timeline
+
+- **Day 1 · 抵达** 落地后先去酒店放行李，傍晚逛了车站商圈。
+- **Day 2 · 神社与拉面** 一早排队参拜，中午的拉面店排了四十分钟。
+- **Day 3 · 返程** 买齐伴手礼，机场的最后一碗乌冬。
+
+:::
+```
+
+**效果：**
+
+:::timeline
+
+- **Day 1 · 抵达** 落地后先去酒店放行李，傍晚逛了车站商圈。
+- **Day 2 · 神社与拉面** 一早排队参拜，中午的拉面店排了四十分钟。
+- **Day 3 · 返程** 买齐伴手礼，机场的最后一碗乌冬。
+
+:::
+
+### 8.2 链接卡片（::linkcard）
+
+裸链接升级成带标题/描述的卡片，构建期自动抓取目标页的 og 信息（抓不到会降级为朴素卡片，不影响构建）：
+
+```markdown
+::linkcard{url="https://astro.build"}
+```
+
+**效果：**
+
+::linkcard{url="https://astro.build"}
+
+### 8.3 视频嵌入（::bilibili / ::youtube）
+
+一行嵌入响应式懒加载播放器，游记配 vlog、技术文配演示都好用：
+
+```markdown
+::bilibili{id=BV1GJ411x7h7}
+
+::bilibili{id=BV1GJ411x7h7 page=2} ← 多 P 视频指定分 P
+
+::youtube{id=dQw4w9WgXcQ}
+```
+
+**效果：**
+
+::bilibili{id=BV1GJ411x7h7}
+
+### 8.4 代码块进阶（Expressive Code）
+
+代码块支持文件名标题、行高亮、diff 标记与折叠，全部写在开头反引号之后：
+
+````markdown
+```python title="train.py" {3} ins={5} del={4} collapse={8-15}
+
+```
+````
+
+- `title="train.py"` —— 标题栏显示文件名
+- `{3}` / `{2-4}` —— 高亮指定行
+- `ins={5}` / `del={4}` —— 绿色新增 / 红色删除的 diff 标记
+- `collapse={8-15}` —— 折叠指定行段，点击展开
+- `showLineNumbers=false` —— 关掉行号
+
+**效果：**
+
+```python title="train.py" {3} ins={5} del={4}
+import torch
+
+model = MyModel().cuda()          # 高亮：模型初始化
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+
+for batch in loader:
+    loss = model(batch).loss
+    loss.backward()
+```
+
+## 9. 发布控制
+
+- **定时发布**：frontmatter 的 `date` 写未来日期，生产构建会自动跳过该文，到期后的下一次构建才会上线（仓库配有每日零点的定时重建工作流，需在 GitHub 配置 `CF_PAGES_DEPLOY_HOOK` secret）。`npm run dev` 里始终可见，方便预览。
+- **置顶**：frontmatter 加 `pinned: true`，文章在列表页置顶并带 PINNED 角标（首页「最新文章」仍按时间序）。
+- **更新时间**：文章在 git 里有多次提交时，头部会自动显示「更新于」（来自最后一次提交时间）。
+
+## 10. 总结
 
 | 插件               | 用途                 | 场景                   |
 | :----------------- | :------------------- | :--------------------- |
@@ -376,8 +486,9 @@ node scripts/strip-exif.mjs ~/Desktop/游记照片 --max 4000
 | `rehype-citation`  | 参考文献             | 研究型、技术深究型文章 |
 | `remark-directive` | Callouts、画廊       | 提示、警告、多图排版   |
 | `mermaid`          | 流程图               | 架构设计、逻辑梳理     |
+| `series` 字段      | 连载导航             | 游记、专题系列         |
 
-## 8. 参考文献
+## 11. 参考文献
 
 [^ref]
 

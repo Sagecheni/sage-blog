@@ -1,0 +1,53 @@
+---
+// 悬浮回顶按钮：滚过约一屏半后浮现。桌面文章页 TOC 里已有 ↑TOP，
+// 这个主要服务移动端长文，但全站启用也不碍事。
+---
+
+<button id="back-to-top" type="button" aria-label="回到顶部">
+  <svg
+    viewBox="0 0 24 24"
+    class="h-4 w-4"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="3"
+    aria-hidden="true"
+  >
+    <path d="M5 15 L12 7 L19 15" stroke-linecap="square"></path>
+  </svg>
+</button>
+
+<script>
+  // window 监听模块级注册一次（跨 ClientRouter 换页存活），按钮实时查询
+  let ticking = false;
+
+  function update() {
+    ticking = false;
+    const btn = document.getElementById("back-to-top");
+    if (!btn) return;
+    btn.classList.toggle(
+      "is-visible",
+      window.scrollY > window.innerHeight * 1.5,
+    );
+  }
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    },
+    { passive: true },
+  );
+
+  function bind() {
+    const btn = document.getElementById("back-to-top");
+    if (!btn || btn.dataset.bound === "true") return;
+    btn.dataset.bound = "true";
+    btn.addEventListener("click", () => window.scrollTo({ top: 0 }));
+    update();
+  }
+
+  document.addEventListener("DOMContentLoaded", bind);
+  document.addEventListener("astro:page-load", bind);
+</script>

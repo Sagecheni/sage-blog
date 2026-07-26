@@ -5,12 +5,15 @@ export interface Props {
   author: string;
   url: string;
   pubDate?: Date;
+  modDate?: Date | null;
+  tags?: string[];
   /** hero = 首页，内容自带全屏 Hero，不加页面底纹；plain = 其余页面 */
   backgroundType?: "hero" | "plain";
   /** 是否播放开场动画（仅首页） */
   opening?: boolean;
 }
 
+import { ClientRouter } from "astro:transitions";
 import "@fontsource-variable/space-grotesk";
 import "@fontsource/ibm-plex-mono";
 import "@fontsource/bangers";
@@ -21,6 +24,7 @@ import SiteNav from "../components/SiteNav.astro";
 import Footer from "../components/Footer.astro";
 import Opening from "../components/Opening.astro";
 import Search from "../components/Search.astro";
+import BackToTop from "../components/BackToTop.astro";
 import "../styles/global.css";
 
 const {
@@ -29,6 +33,8 @@ const {
   author,
   url,
   pubDate,
+  modDate,
+  tags,
   backgroundType = "plain",
   opening = false,
 } = Astro.props;
@@ -41,17 +47,26 @@ const {
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/p5-witch-hat.svg" />
     <meta name="generator" content={Astro.generator} />
-    <Seo {title} {description} {author} {url} {pubDate} />
+    <Seo {title} {description} {author} {url} {pubDate} {modDate} {tags} />
+    <ClientRouter />
     <script is:inline>
       // 预绘制主题：先读 localStorage 再落 class，避免 ThemeToggle 挂载时闪一下。
       // 默认 dark（P5R 本体就是暗的）。
       // 同时打上 .js 标记 —— 滚动揭示的初始隐藏态只在有 JS 时生效，
       // 禁用 JS 的访客直接看到完整内容，而不是永久空白。
+      // ClientRouter 换页会用新文档的 <html> 属性覆盖当前的（丢掉客户端加的
+      // class），所以 astro:after-swap 里要立刻补回 —— 该事件在绘制前触发，不闪。
       (() => {
-        document.documentElement.classList.add("js");
-        const saved = localStorage.getItem("theme");
-        const theme = saved === "light" || saved === "dark" ? saved : "dark";
-        document.documentElement.classList.add(theme);
+        const apply = () => {
+          document.documentElement.classList.add("js");
+          const saved = localStorage.getItem("theme");
+          const theme = saved === "light" || saved === "dark" ? saved : "dark";
+          document.documentElement.classList.add(theme);
+          // 弹层（搜索/筛选）开着时换页，滚动锁会残留在存活的 <html> 上，清掉
+          document.documentElement.style.overflow = "";
+        };
+        apply();
+        document.addEventListener("astro:after-swap", apply);
       })();
     </script>
   </head>
@@ -61,15 +76,19 @@ const {
       backgroundType === "plain" && "page-texture",
     ]}
   >
+    {/* 键盘用户跳过导航直达正文，Tab 聚焦时浮现 */}
+    <a href="#main-content" class="skip-link">跳到正文</a>
+
     {opening && <Opening />}
     <SiteNav />
     <Search />
 
-    <main class="relative z-[1] flex-1">
+    <main id="main-content" class="relative z-[1] flex-1">
       <slot />
     </main>
 
     <Footer />
+    <BackToTop />
 
     <script>
       // 滚动揭示：给进入视口的 .landing-section 加 .is-visible（分级延迟由 CSS 的 .delay-* 控制）

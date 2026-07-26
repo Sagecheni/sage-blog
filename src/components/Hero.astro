@@ -197,6 +197,45 @@ const charStyle = (index: number) =>
 </style>
 
 <script>
+  // ClientRouter 适配：mousemove 只在模块加载时注册一次；
+  // rAF 循环在 Hero 被换页卸下（isConnected 为假）时自行终止，
+  // 回到首页由 init 重启 —— 否则每次进首页都会累积一个永续循环
+  let targetX = 0;
+  let targetY = 0;
+  let currentX = 0;
+  let currentY = 0;
+  let items: HTMLElement[] = [];
+  let looping = false;
+
+  window.addEventListener(
+    "mousemove",
+    (event: MouseEvent) => {
+      // 归一化到 [-1, 1]
+      targetX = (event.clientX / window.innerWidth) * 2 - 1;
+      targetY = (event.clientY / window.innerHeight) * 2 - 1;
+    },
+    { passive: true },
+  );
+
+  function frame() {
+    if (!items.length || !items[0].isConnected) {
+      looping = false;
+      return;
+    }
+
+    currentX += (targetX - currentX) * 0.06;
+    currentY += (targetY - currentY) * 0.06;
+
+    for (const item of items) {
+      const speed = Number(item.dataset.speed) || 0;
+      item.style.transform = `translate(${currentX * speed * 26}px, ${
+        currentY * speed * 26
+      }px)`;
+    }
+
+    requestAnimationFrame(frame);
+  }
+
   function initHeroParallax() {
     const decor = document.getElementById("hero-decor");
     if (!decor) return;
@@ -206,38 +245,10 @@ const charStyle = (index: number) =>
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (window.matchMedia("(pointer: coarse)").matches) return;
 
-    const items = [...decor.querySelectorAll<HTMLElement>("[data-speed]")];
-    if (!items.length) return;
+    items = [...decor.querySelectorAll<HTMLElement>("[data-speed]")];
+    if (!items.length || looping) return;
 
-    let targetX = 0;
-    let targetY = 0;
-    let currentX = 0;
-    let currentY = 0;
-
-    window.addEventListener(
-      "mousemove",
-      (event: MouseEvent) => {
-        // 归一化到 [-1, 1]
-        targetX = (event.clientX / window.innerWidth) * 2 - 1;
-        targetY = (event.clientY / window.innerHeight) * 2 - 1;
-      },
-      { passive: true },
-    );
-
-    function frame() {
-      currentX += (targetX - currentX) * 0.06;
-      currentY += (targetY - currentY) * 0.06;
-
-      for (const item of items) {
-        const speed = Number(item.dataset.speed) || 0;
-        item.style.transform = `translate(${currentX * speed * 26}px, ${
-          currentY * speed * 26
-        }px)`;
-      }
-
-      requestAnimationFrame(frame);
-    }
-
+    looping = true;
     requestAnimationFrame(frame);
   }
 

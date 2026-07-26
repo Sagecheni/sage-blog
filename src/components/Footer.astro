@@ -1,9 +1,23 @@
 ---
+import { getPublishedBlogs, wordCountOf, siteFoundedDate } from "../data/blog";
+
 // 构建期取年份，避免每年手改一次
 const year = new Date().getFullYear();
+
+// 站点统计（构建期算好，零客户端开销）
+const blogs = await getPublishedBlogs();
+const totalWords = blogs.reduce((sum, blog) => sum + wordCountOf(blog), 0);
+const days = Math.max(
+  1,
+  Math.ceil((Date.now() - siteFoundedDate().getTime()) / 86_400_000),
+);
+const wordsLabel =
+  totalWords >= 10_000
+    ? `${(totalWords / 10_000).toFixed(1)} 万字`
+    : `${totalWords} 字`;
 ---
 
-<footer class="mx-auto w-full max-w-[1280px] px-4 pt-16 pb-8">
+<footer class="mx-auto w-full max-w-[1280px] px-4 pt-16 pb-8 print:hidden">
   {/* P5R 斜切分隔线 */}
   <div class="mb-6 flex items-center gap-3" aria-hidden="true">
     <span class="bg-accent h-0.5 flex-1 -skew-x-12"></span>
@@ -14,7 +28,12 @@ const year = new Date().getFullYear();
   <div
     class="text-foreground-secondary flex flex-col items-center justify-between gap-3 text-sm select-none sm:flex-row"
   >
-    <p>© {year} MIT License</p>
+    <p class="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <span>© {year} MIT License</span>
+      <span class="text-foreground-secondary/60 font-mono text-xs">
+        {blogs.length} 篇 · {wordsLabel} · 建站 {days} 天
+      </span>
+    </p>
     <p class="flex flex-wrap items-center gap-1.5">
       <span>powered by</span>
       <a

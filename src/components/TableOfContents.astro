@@ -34,9 +34,85 @@ const toc = (headings ?? []).filter(
   // 红条位置改为实测：量激活项的真实 offsetTop / offsetHeight，
   // 写进 CSS 变量驱动 ::after。原实现用 :has(nth-child(N)) 按固定 2rem 硬编码，
   // 中文标题一换行就全体漂移，且只写到第 10 项。
+  //
+  // ClientRouter 适配：window 监听只在模块加载时注册一次，
+  // 每页的元素引用放进 ctx，换页时由 initToc 重建 —— 否则每篇文章
+  // 都会累积一对引用旧 DOM 的 scroll/resize 死监听。
+  type TocContext = {
+    nav: HTMLElement;
+    list: HTMLElement;
+    links: HTMLAnchorElement[];
+    headings: HTMLElement[];
+    activeIndex: number;
+  };
+
+  let ctx: TocContext | null = null;
+  let raf = 0;
+
+  function measureBar(index: number) {
+    if (!ctx) return;
+    const link = ctx.links[index];
+    ctx.list.style.setProperty("--toc-bar-y", `${link.offsetTop}px`);
+    ctx.list.style.setProperty("--toc-bar-h", `${link.offsetHeight}px`);
+    ctx.list.style.setProperty("--toc-bar-o", "1");
+  }
+
+  // 目录自身可滚动（长文章），让激活项始终留在可视范围内
+  function keepInView(link: HTMLAnchorElement) {
+    if (!ctx) return;
+    const top = ctx.list.offsetTop + link.offsetTop;
+    const bottom = top + link.offsetHeight;
+    if (top < ctx.nav.scrollTop + 8) {
+      ctx.nav.scrollTop = top - 8;
+    } else if (bottom > ctx.nav.scrollTop + ctx.nav.clientHeight - 8) {
+      ctx.nav.scrollTop = bottom - ctx.nav.clientHeight + 8;
+    }
+  }
+
+  function setActive(index: number) {
+    if (!ctx) return;
+    const changed = index !== ctx.activeIndex;
+    ctx.activeIndex = index;
+    ctx.links.forEach((link, i) =>
+      link.classList.toggle("is-active", i === index),
+    );
+    // 未变化时也重测 —— 字体加载/窗口缩放会改变行高
+    measureBar(index);
+    if (changed) keepInView(ctx.links[index]);
+  }
+
+  function currentIndex() {
+    if (!ctx) return 0;
+    const header = document.querySelector<HTMLElement>(".header-nav");
+    // 触发线：固定导航底缘再往下一小段
+    const line = (header?.offsetHeight ?? 68) + 36;
+    let index = 0;
+    for (let i = 0; i < ctx.headings.length; i++) {
+      if (ctx.headings[i].getBoundingClientRect().top <= line) index = i;
+      else break;
+    }
+    return index;
+  }
+
+  function schedule() {
+    // 换页后旧 ctx 指向已卸下的 DOM，直接丢弃
+    if (ctx && !ctx.nav.isConnected) ctx = null;
+    if (!ctx) return;
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => setActive(currentIndex()));
+  }
+
+  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("resize", schedule, { passive: true });
+
   function initToc() {
     const nav = document.querySelector<HTMLElement>(".toc");
-    if (!nav || nav.dataset.bound === "true") return;
+    // 目标页没有目录（首页/列表页）时清空上下文
+    if (!nav) {
+      ctx = null;
+      return;
+    }
+    if (nav.dataset.bound === "true") return;
     nav.dataset.bound = "true";
 
     const list = nav.querySelector<HTMLElement>(".toc-list");
@@ -49,59 +125,7 @@ const toc = (headings ?? []).filter(
     // id 对不上宁可不高亮，也不高亮错
     if (headings.length !== links.length) return;
 
-    const header = document.querySelector<HTMLElement>(".header-nav");
-    // 触发线：固定导航底缘再往下一小段
-    const triggerLine = () => (header?.offsetHeight ?? 68) + 36;
-
-    let activeIndex = -1;
-
-    function measureBar(index: number) {
-      const link = links[index];
-      list!.style.setProperty("--toc-bar-y", `${link.offsetTop}px`);
-      list!.style.setProperty("--toc-bar-h", `${link.offsetHeight}px`);
-      list!.style.setProperty("--toc-bar-o", "1");
-    }
-
-    // 目录自身可滚动（长文章），让激活项始终留在可视范围内
-    function keepInView(link: HTMLAnchorElement) {
-      const top = list!.offsetTop + link.offsetTop;
-      const bottom = top + link.offsetHeight;
-      if (top < nav!.scrollTop + 8) {
-        nav!.scrollTop = top - 8;
-      } else if (bottom > nav!.scrollTop + nav!.clientHeight - 8) {
-        nav!.scrollTop = bottom - nav!.clientHeight + 8;
-      }
-    }
-
-    function setActive(index: number) {
-      const changed = index !== activeIndex;
-      activeIndex = index;
-      links.forEach((link, i) =>
-        link.classList.toggle("is-active", i === index),
-      );
-      // 未变化时也重测 —— 字体加载/窗口缩放会改变行高
-      measureBar(index);
-      if (changed) keepInView(links[index]);
-    }
-
-    function currentIndex() {
-      const line = triggerLine();
-      let index = 0;
-      for (let i = 0; i < headings.length; i++) {
-        if (headings[i].getBoundingClientRect().top <= line) index = i;
-        else break;
-      }
-      return index;
-    }
-
-    let raf = 0;
-    function schedule() {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setActive(currentIndex()));
-    }
-
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule, { passive: true });
+    ctx = { nav, list, links, headings, activeIndex: -1 };
 
     // 点击立即反馈，不等平滑滚动结算
     links.forEach((link, index) =>
