@@ -21,8 +21,6 @@ tags: ["rss", "NAS"]
 - [Miniflux](https://miniflux.app/)(RSS订阅器)
 - [Reeder5](https://reederapp.com/)(RSS阅读器)
 
-
-
 我的所有服务都是在内网构筑的，不怕有入侵，所以安全性可能比较堪忧，**需要对外网开放的可能需要:red[注意下安全性]**。
 
 ## RSSHUB
@@ -49,18 +47,16 @@ Miniflux is a minimalist and opinionated feed reader.
 Miniflux 是一款简约而有主见的 feed 阅读器。
 :::
 
-
 ### 为什么是Miniflux
 
 实际上，我自己就在FreshRss和Miniflux这两个订阅器里面纠结了挺久的。这两个都是开源的rss阅读器。FreshRss功能强大，Miniflux效率够高且简约。最后出于Miniflux是Go写的选择了Miniflux，因为我自己后续需要对Miniflux进行一些魔改，所以选择了更加熟悉的Go。（FreshRss居然是拿PHP写的）。
-
-
 
 ### 部署
 
 我是在自己的NAS上使用docker compsoe的形式部署的。此处是官方的文档->[Miniflux Installation with Docker](https://miniflux.app/docs/docker.html)
 
 下面的配置都是个人的，可以根据官方文档进行适当的更改。
+
 ```yaml
 services:
   miniflux:
@@ -120,7 +116,6 @@ networks:
     external: true
 ```
 
-
 ### 缓存服务
 
 Miniflux只有图片代理服务(Image Proxy)，这对我一个拿RSS来刷Twitter、抖音、B站的人着实不太友好，于是使用Nginx实现了一个依附于nginx的缓存服务。
@@ -134,11 +129,11 @@ events {
 http {
     include       mime.types;
     default_type  application/octet-stream;
-    proxy_cache_path /var/cache/nginx/miniflux_media 
-                     levels=1:2 
-                     keys_zone=miniflux_media_cache:10m 
-                     max_size=10g 
-                     inactive=7d 
+    proxy_cache_path /var/cache/nginx/miniflux_media
+                     levels=1:2
+                     keys_zone=miniflux_media_cache:10m
+                     max_size=10g
+                     inactive=7d
                      use_temp_path=off;
     log_format main '$remote_addr - [$time_local] "$request" '
                     '$status $body_bytes_sent "$http_referer" '
@@ -173,12 +168,12 @@ http {
                 ngx.var.target_url = decoded
                 -- 匹配 http:// 或 https:// 后面的部分，直到遇到下一个 /
                 local host = string.match(decoded, "^https?://([^/]+)")
-                
+
                 if not host then
                     ngx.log(ngx.ERR, "No host found in: ", decoded)
                     return ngx.exit(400)
                 end
-                
+
                 ngx.var.target_host = host
             }
             proxy_pass $target_url;
@@ -203,10 +198,6 @@ http {
 }
 ```
 
-
-
-
-
 ## Reeder5
 
 选择Reeder5的原因很简单，好用而且是买断制。实际上，Mac上也有开源的[NetNewsWire](https://netnewswire.com/)，但由于我个人审美的原因，还是选择了Reeder。
@@ -214,6 +205,3 @@ http {
 （感觉被Apple统治大脑了....一百多块的东西随手就买了....）
 
 ![Apple 订单](https://sageblog-1316665129.cos.ap-guangzhou.myqcloud.com/img/image-20260106211512891.png)
-
-
-

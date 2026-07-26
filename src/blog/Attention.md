@@ -10,7 +10,6 @@ bibliography: public/bibs/ai.bib
 
 ![Attention Mind Map](https://sa1geblogimage-1316665129.cos.ap-beijing.myqcloud.com/img/Attention-Mind-Map.png)
 
-
 ## 为什么需要注意力机制
 
 传统的 Seq2Seq 模型(此处以 RNN 的 Encoder - Decoder 模型为例)，会将输入序列压缩为一个定长的向量，解码器再从这个向量生成输出序列。但是定长的向量难以有效编码所有必要的信息，那么就成为了处理长句子的瓶颈。
@@ -29,7 +28,7 @@ $$
 - 在Scaled Dot-Product Attention 中，首先计算 query 和 key 的关联性，然后将这个关联性作为value 的权重，各个权重与 value 的乘积相加得到输出。(公式 1)
 - $\sqrt{ d_{k} }$作用是缩放注意力分数。因为当$d_{k}$很大的时候，点积$QK^T$的结果会很大，导致 Softmax 产生极度不均匀的分布，梯度会变得很小。
 
-```py title="ScaledDotProductAttention.py" 
+```py title="ScaledDotProductAttention.py"
 import torch
 import torch.nn as nn
 
@@ -85,7 +84,6 @@ if __name__ == "__main__":
     test()
 ```
 
-
 ## 多头注意力
 
 Transformer 是完全基于注意力机制的新架构，放弃了循环和卷积，使用多头注意力(Multi-Head Attention)(MHA)。
@@ -100,7 +98,6 @@ MHA 的基本思想是并行地执行多次注意力函数(SDPA)。
 1. 线性投影：对于输入的 Q,K,V，MHA 使用不同的、可学习的线性投影投影 h 次到 $d_{k},d_{k},d_{v}$ 维。
 2. 并行注意力：对于这 h 组投影后的 Q,K,V，并行地执行注意力函数(SDPA)。Transformer模型中通常会将每个头的维度$d_{k}$和$d_{v}$设置为模型维度$d_{model}$除以头的数量 h$d_{k}=d_{v}=\frac{d_{model}}{k}$
 3. 拼接和最终投影：将 h 个并行注意力函数的输出($d_{v}$维)拼接起来，形成一个维度为$h \times d_{v}$ 的向量。最后通过，另一个学习到的线性投影矩阵$W_{O}$将这个拼接后的向量投影到最终的输出维度$d_{model}$
-
 
 $$
 \begin{aligned}
