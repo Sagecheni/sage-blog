@@ -1,0 +1,37 @@
+# push / PR 时跑：类型检查 + lint + 构建（含 Pagefind 索引与死链检查）+ E2E 冒烟。
+# 构建需要联网拉 COS 图片（image.domains 授权域），Actions 默认可出网。
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint src scripts
+
+      - name: Build (astro + pagefind + 死链检查)
+        run: npm run build
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E smoke tests
+        run: npx playwright test
