@@ -1,0 +1,68 @@
+---
+// 悬停/聚焦脚注标号（GFM 输出的 [data-footnote-ref]）时，
+// 就地浮出脚注内容，省去跳到文末再跳回来。
+// 触屏跳过（点按仍走原生锚点跳转）；浮窗挂在 body 上，换页随 body 消亡。
+---
+
+<script>
+  let pop: HTMLElement | null = null;
+
+  function ensurePop(): HTMLElement {
+    if (pop && pop.isConnected) return pop;
+    pop = document.createElement("div");
+    pop.className = "footnote-pop";
+    pop.setAttribute("role", "tooltip");
+    document.body.appendChild(pop);
+    return pop;
+  }
+
+  function hide() {
+    if (pop && pop.isConnected) pop.classList.remove("is-visible");
+  }
+
+  function show(ref: HTMLAnchorElement) {
+    const hash = decodeURIComponent(new URL(ref.href).hash.slice(1));
+    const note = document.getElementById(hash);
+    if (!note) return;
+
+    const el = ensurePop();
+    const clone = note.cloneNode(true) as HTMLElement;
+    // 去掉回跳箭头，浮窗里没意义
+    clone
+      .querySelectorAll("[data-footnote-backref]")
+      .forEach((backref) => backref.remove());
+    el.innerHTML = clone.innerHTML;
+
+    // 先摆到锚点上方；顶部放不下就翻到下方
+    const rect = ref.getBoundingClientRect();
+    el.style.left = `${Math.max(16, Math.min(rect.left, window.innerWidth - el.offsetWidth - 16))}px`;
+    el.classList.add("is-visible");
+    const height = el.offsetHeight;
+    const above = rect.top - height - 10;
+    el.style.top =
+      above > 8
+        ? `${window.scrollY + above}px`
+        : `${window.scrollY + rect.bottom + 10}px`;
+  }
+
+  // 触屏没有 hover，浮窗只做指针/键盘增强
+  if (!window.matchMedia("(pointer: coarse)").matches) {
+    for (const enter of ["mouseover", "focusin"] as const) {
+      document.addEventListener(enter, (event) => {
+        const ref = (event.target as HTMLElement | null)?.closest?.(
+          "[data-footnote-ref]",
+        );
+        if (ref) show(ref as HTMLAnchorElement);
+      });
+    }
+    for (const leave of ["mouseout", "focusout"] as const) {
+      document.addEventListener(leave, (event) => {
+        if (
+          (event.target as HTMLElement | null)?.closest?.("[data-footnote-ref]")
+        )
+          hide();
+      });
+    }
+    window.addEventListener("scroll", hide, { passive: true });
+  }
+</script>

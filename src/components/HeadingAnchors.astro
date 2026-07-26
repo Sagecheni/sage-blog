@@ -1,0 +1,44 @@
+---
+// 给正文 h2/h3 注入锚点按钮：悬停浮现 #，点击复制小节直链。
+// 客户端注入而非构建期 —— 不污染 Pagefind 索引与 RSS。
+---
+
+<script>
+  function initAnchors() {
+    const markdown = document.querySelector<HTMLElement>(".markdown");
+    if (!markdown || markdown.dataset.anchors === "true") return;
+    markdown.dataset.anchors = "true";
+
+    markdown
+      .querySelectorAll<HTMLElement>("h2[id], h3[id]")
+      .forEach((heading) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "heading-anchor";
+        btn.textContent = "#";
+        btn.setAttribute("aria-label", "复制本节链接");
+
+        btn.addEventListener("click", async () => {
+          const url = `${location.origin}${location.pathname}#${heading.id}`;
+          try {
+            await navigator.clipboard.writeText(url);
+            btn.textContent = "✓";
+            btn.classList.add("is-copied");
+            setTimeout(() => {
+              btn.textContent = "#";
+              btn.classList.remove("is-copied");
+            }, 1200);
+          } catch (err) {
+            console.error("Failed to copy:", err);
+            // 剪贴板不可用时至少把锚点带进地址栏
+            location.hash = heading.id;
+          }
+        });
+
+        heading.appendChild(btn);
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", initAnchors);
+  document.addEventListener("astro:page-load", initAnchors);
+</script>

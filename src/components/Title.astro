@@ -5,7 +5,14 @@ import IconTag from "../assets/icons/tag.svg";
 import CopyButton from "./CopyButton";
 import Tag from "./Tag.astro";
 
-const { frontmatter, readTime } = Astro.props;
+const { frontmatter, readTime, modDate } = Astro.props;
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 ---
 
 <header class="mb-10">
@@ -37,12 +44,17 @@ const { frontmatter, readTime } = Astro.props;
           class="stroke-foreground-secondary group-hover:stroke-accent size-4 stroke-1 transition-colors"
         />
         <p class="text-foreground-secondary font-mono text-sm">
+          {formatDate(frontmatter.date)}
           {
-            frontmatter.date.toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
+            modDate && (
+              <span
+                class="text-accent/80"
+                title={`最后更新：${formatDate(modDate)}`}
+              >
+                {" "}
+                · 更新于 {formatDate(modDate)}
+              </span>
+            )
           }
         </p>
       </div>
@@ -64,7 +76,7 @@ const { frontmatter, readTime } = Astro.props;
             <IconTag class="stroke-foreground-secondary size-4 stroke-1" />
             <div class="flex flex-wrap gap-2">
               {frontmatter.tags.map((tag: string) => (
-                <Tag name={tag} />
+                <Tag name={tag} href={`/blog?tag=${encodeURIComponent(tag)}`} />
               ))}
             </div>
           </div>

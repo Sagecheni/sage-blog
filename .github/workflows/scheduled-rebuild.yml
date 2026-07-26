@@ -1,0 +1,29 @@
+# 定时触发 Cloudflare Pages 重建，让「未来日期」的定时发布文章按时上线。
+#
+# 启用步骤：
+#   1. Cloudflare Pages 项目 → Settings → Builds & deployments → Deploy hooks
+#      创建一个 hook，复制 URL
+#   2. GitHub 仓库 → Settings → Secrets and variables → Actions
+#      新建 secret：CF_PAGES_DEPLOY_HOOK = 上面的 URL
+# 未配置 secret 时本工作流静默跳过，不会报错。
+name: Scheduled rebuild (定时发布)
+
+on:
+  schedule:
+    - cron: "5 16 * * *" # UTC 16:05 = 北京时间 00:05
+  workflow_dispatch: # 手动触发入口
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare Pages deploy hook
+        env:
+          DEPLOY_HOOK: ${{ secrets.CF_PAGES_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "未配置 CF_PAGES_DEPLOY_HOOK secret，跳过"
+            exit 0
+          fi
+          curl -fsS -X POST "$DEPLOY_HOOK"
+          echo "已触发重建"

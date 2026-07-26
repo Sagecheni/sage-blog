@@ -1,6 +1,5 @@
 ---
-import { getCollection } from "astro:content";
-import type { BlogType } from "../content.config";
+import { getPublishedBlogs, readTimeOf } from "../data/blog";
 
 export interface Props {
   /** 最多显示几篇 / cap on rendered rows */
@@ -9,20 +8,14 @@ export interface Props {
 
 const { limit = 6 } = Astro.props;
 
-const blogs: BlogType[] = await getCollection("blogs");
-
-// readTime 与 blog/[...slug].astro 的 getStaticPaths 保持同一算法（词数 ÷ 200）
-const posts = blogs
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
-  .slice(0, limit)
-  .map((blog) => ({
-    slug: blog.data.slug,
-    title: blog.data.title,
-    date: blog.data.date,
-    readTime: Math.ceil(
-      (blog.body ?? "").split(/\s+/).filter(Boolean).length / 200,
-    ),
-  }));
+// 共享数据层：定时发布过滤 + CJK 感知的 readTime，与文章页同一来源
+const published = await getPublishedBlogs();
+const posts = published.slice(0, limit).map((blog) => ({
+  slug: blog.data.slug,
+  title: blog.data.title,
+  date: blog.data.date,
+  readTime: readTimeOf(blog),
+}));
 ---
 
 <div class="post-list flex flex-col gap-1">

@@ -1,0 +1,95 @@
+---
+// giscus 评论区（基于 GitHub Discussions）。
+//
+// ── 启用步骤 ──
+// 1. 仓库 Settings → 开启 Discussions，建一个 Announcements 类型分类（如 "Comments"）
+// 2. 安装 https://github.com/apps/giscus 到该仓库
+// 3. 到 https://giscus.app 选好仓库/分类，把生成的四个值填进下面 GISCUS
+// 任何一项为空则整个组件不渲染，构建产物零痕迹。
+const GISCUS = {
+  repo: "", // 例 "Sagecheni/sage-blog"
+  repoId: "",
+  category: "",
+  categoryId: "",
+};
+
+const enabled = Boolean(
+  GISCUS.repo && GISCUS.repoId && GISCUS.category && GISCUS.categoryId,
+);
+---
+
+{
+  enabled && (
+    <section
+      id="comments"
+      class="mx-auto w-full max-w-4xl px-4 pb-16 lg:px-0 print:hidden"
+      data-giscus-repo={GISCUS.repo}
+      data-giscus-repo-id={GISCUS.repoId}
+      data-giscus-category={GISCUS.category}
+      data-giscus-category-id={GISCUS.categoryId}
+    >
+      <div class="mb-5 flex items-center gap-3">
+        <span class="bg-accent block h-5 w-1.5 -skew-x-12" aria-hidden="true" />
+        <h2 class="font-heading text-foreground m-0 text-xl tracking-widest">
+          COMMENTS · 评论
+        </h2>
+      </div>
+      <div class="giscus" />
+    </section>
+  )
+}
+
+<script>
+  const themeOf = () =>
+    document.documentElement.classList.contains("light") ? "light" : "dark";
+
+  // 主题同步观察器只在 giscus 真正启用（首次 init 成功）后才启动，
+  // 配置为空时这段脚本除注册两个监听外零活动
+  let themeObserverStarted = false;
+  function startThemeObserver() {
+    if (themeObserverStarted) return;
+    themeObserverStarted = true;
+    new MutationObserver(() => {
+      const iframe = document.querySelector<HTMLIFrameElement>(
+        "iframe.giscus-frame",
+      );
+      iframe?.contentWindow?.postMessage(
+        { giscus: { setConfig: { theme: themeOf() } } },
+        "https://giscus.app",
+      );
+    }).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+  }
+
+  function initGiscus() {
+    const host = document.getElementById("comments");
+    if (!host || host.dataset.bound === "true") return;
+    host.dataset.bound = "true";
+    startThemeObserver();
+
+    const script = document.createElement("script");
+    script.src = "https://giscus.app/client.js";
+    script.async = true;
+    script.crossOrigin = "anonymous";
+    Object.entries({
+      "data-repo": host.dataset.giscusRepo ?? "",
+      "data-repo-id": host.dataset.giscusRepoId ?? "",
+      "data-category": host.dataset.giscusCategory ?? "",
+      "data-category-id": host.dataset.giscusCategoryId ?? "",
+      "data-mapping": "pathname",
+      "data-strict": "1",
+      "data-reactions-enabled": "1",
+      "data-emit-metadata": "0",
+      "data-input-position": "top",
+      "data-theme": themeOf(),
+      "data-lang": "zh-CN",
+      "data-loading": "lazy",
+    }).forEach(([key, value]) => script.setAttribute(key, value));
+    host.querySelector(".giscus")?.appendChild(script);
+  }
+
+  document.addEventListener("DOMContentLoaded", initGiscus);
+  document.addEventListener("astro:page-load", initGiscus);
+</script>

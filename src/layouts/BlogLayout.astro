@@ -6,8 +6,34 @@ import TableOfContents from "../components/TableOfContents.astro";
 import Mermaid from "../components/Mermaid.astro";
 import MathStyles from "../components/MathStyles.astro";
 import ImageZoom from "../components/ImageZoom.astro";
+import FootnotePreview from "../components/FootnotePreview.astro";
+import HeadingAnchors from "../components/HeadingAnchors.astro";
+import Comments from "../components/Comments.astro";
+import Tag from "../components/Tag.astro";
 
-const { frontmatter, readTime, headings, older, newer } = Astro.props;
+const {
+  frontmatter,
+  readTime,
+  headings,
+  modDate,
+  older,
+  newer,
+  series,
+  related,
+} = Astro.props;
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+// 移动端折叠目录的数据（与侧栏 TOC 同样只收 h2/h3）
+type Heading = { depth: number; slug: string; text: string };
+const tocHeadings: Heading[] = (headings ?? []).filter(
+  (h: Heading) => h.depth >= 2 && h.depth <= 3,
+);
 ---
 
 <BaseLayout
@@ -16,6 +42,8 @@ const { frontmatter, readTime, headings, older, newer } = Astro.props;
   author={frontmatter.author}
   url={`https://blog.sagec.fun/blog/${frontmatter.slug}`}
   pubDate={frontmatter.date}
+  modDate={modDate}
+  tags={frontmatter.tags}
 >
   {
     /* KaTeX 样式只挂在文章路由上，首页 / 博客列表 / 关于 / 404 不再背它。
@@ -24,9 +52,14 @@ const { frontmatter, readTime, headings, older, newer } = Astro.props;
   <MathStyles />
   <ProgressBar client:idle />
 
-  <div class="relative mx-auto max-w-5xl px-4 py-8 lg:px-0">
+  {
+    /* max-w-4xl：18px 字号下约 48 汉字/行 —— 3xl（40 字）偏窄、5xl（55+）偏宽的折中 */
+  }
+  <div class="relative mx-auto max-w-4xl px-4 py-8 lg:px-0">
     {/* TOC — 大屏绝对定位到正文左侧，不挤压内容宽度 */}
-    <aside class="absolute top-0 right-full mr-10 hidden h-full w-56 xl:block">
+    <aside
+      class="absolute top-0 right-full mr-10 hidden h-full w-56 xl:block print:hidden"
+    >
       <div class="sticky top-[calc(var(--nav-height)+1rem)]">
         {
           headings && headings.length > 0 && (
@@ -44,11 +77,88 @@ const { frontmatter, readTime, headings, older, newer } = Astro.props;
         Pagefind 就只收录声明过的区域，导航/页脚/列表页自动排除） */
     }
     <article class="pb-8" data-pagefind-body>
-      <Title frontmatter={frontmatter} readTime={readTime} />
+      <Title frontmatter={frontmatter} readTime={readTime} modDate={modDate} />
+
+      {/* 移动端目录：xl 以下侧栏 TOC 不可见，这里补一个原生折叠版。
+          标题文本已在正文以 heading 形式索引过，data-pagefind-ignore 防重复 */}
+      {
+        tocHeadings.length > 0 && (
+          <details
+            class="toc-mobile card mb-8 p-4 xl:hidden print:hidden"
+            data-pagefind-ignore
+          >
+            <summary class="font-heading text-accent cursor-pointer text-lg tracking-widest select-none">
+              目录
+            </summary>
+            <ol class="mt-3 ml-1 list-none space-y-1.5 border-l-2 border-[var(--border)] pl-4">
+              {tocHeadings.map((h: Heading) => (
+                <li class:list={[h.depth === 3 && "pl-4"]}>
+                  <a
+                    href={`#${h.slug}`}
+                    class="text-foreground-secondary hover:text-accent text-sm transition-colors"
+                  >
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </details>
+        )
+      }
+
+      {/* 连载系列导航 —— 当前篇高亮不可点，其余无缝换页 */}
+      {
+        series && (
+          <nav
+            aria-label="系列文章"
+            class="card mb-10 p-4 md:p-5"
+            data-pagefind-ignore
+          >
+            <span class="card-notch" aria-hidden="true" />
+            <div class="mb-3 flex items-baseline justify-between gap-3">
+              <span class="font-heading text-accent text-lg tracking-wider">
+                连载 · {series.name}
+              </span>
+              <span class="text-foreground-secondary font-mono text-xs tracking-widest">
+                第 {series.index} / {series.total} 篇
+              </span>
+            </div>
+            <ol class="m-0 list-none space-y-1 p-0">
+              {series.posts.map(
+                (
+                  post: { slug: string; title: string; current: boolean },
+                  index: number,
+                ) => (
+                  <li class="flex items-baseline gap-3">
+                    <span class="text-foreground-secondary font-mono text-xs">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    {post.current ? (
+                      <span class="text-accent border-accent border-b-2 font-bold">
+                        {post.title}
+                      </span>
+                    ) : (
+                      <a
+                        href={`/blog/${post.slug}`}
+                        class="text-foreground-secondary hover:text-accent transition-colors"
+                      >
+                        {post.title}
+                      </a>
+                    )}
+                  </li>
+                ),
+              )}
+            </ol>
+          </nav>
+        )
+      }
+
       <section class="markdown">
         <slot />
         <Mermaid />
         <ImageZoom />
+        <FootnotePreview />
+        <HeadingAnchors />
       </section>
     </article>
 
@@ -57,7 +167,7 @@ const { frontmatter, readTime, headings, older, newer } = Astro.props;
       (older || newer) && (
         <nav
           aria-label="相邻文章"
-          class="border-border grid grid-cols-1 gap-4 border-t-2 pt-8 pb-16 sm:grid-cols-2"
+          class="border-border grid grid-cols-1 gap-4 border-t-2 pt-8 pb-16 sm:grid-cols-2 print:hidden"
         >
           {older ? (
             <a href={`/blog/${older.slug}`} class="card group block p-4">
@@ -89,6 +199,53 @@ const { frontmatter, readTime, headings, older, newer } = Astro.props;
         </nav>
       )
     }
+
+    {/* 相关文章 —— 标签交集打分，构建期算好；没有就整节不出现 */}
+    {
+      related && related.length > 0 && (
+        <section aria-label="相关文章" class="pb-16 print:hidden">
+          <div class="mb-5 flex items-center gap-3">
+            <span
+              class="bg-accent block h-5 w-1.5 -skew-x-12"
+              aria-hidden="true"
+            />
+            <h2 class="font-heading text-foreground m-0 text-xl tracking-widest">
+              RELATED · 相关文章
+            </h2>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {related.map(
+              (post: {
+                slug: string;
+                title: string;
+                date: Date;
+                sharedTags: string[];
+              }) => (
+                <a href={`/blog/${post.slug}`} class="card group block p-4">
+                  <span class="card-notch" aria-hidden="true" />
+                  <span class="font-heading group-hover:text-accent line-clamp-2 block text-base tracking-wide transition-colors">
+                    {post.title}
+                  </span>
+                  <span class="text-foreground-secondary mt-2 block font-mono text-xs">
+                    {formatDate(post.date)}
+                  </span>
+                  {/* 卡片本身是 <a>，贴纸保持 span —— 嵌套链接不合法 */}
+                  <span class="mt-3 flex flex-wrap gap-1.5">
+                    {post.sharedTags.map((tag) => (
+                      <Tag name={tag} />
+                    ))}
+                  </span>
+                </a>
+              ),
+            )}
+          </div>
+        </section>
+      )
+    }
+
+    {/* giscus 评论（Comments.astro 里填好配置后出现） */}
+    <Comments />
   </div>
 </BaseLayout>
 

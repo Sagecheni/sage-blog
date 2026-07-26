@@ -1,11 +1,10 @@
 ---
-import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Card from "../../components/Card.astro";
 import BlogFilters from "../../components/BlogFilters.astro";
 import Tag from "../../components/Tag.astro";
+import { getPublishedBlogs } from "../../data/blog";
 import type { ArchiveYear } from "../../components/BlogFilters.astro";
-import type { BlogType } from "../../content.config";
 import IconFilter from "../../assets/icons/tag.svg";
 import IconX from "../../assets/icons/x.svg";
 
@@ -29,10 +28,12 @@ function removeMarkdown(markdown: string) {
     .trim();
 }
 
-const blogs: BlogType[] = await getCollection("blogs");
-const allBlogs = blogs.sort(
-  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
-);
+// 共享数据层：定时发布过滤 + 日期降序；置顶的提到最前（组内仍按日期）
+const published = await getPublishedBlogs();
+const allBlogs = [
+  ...published.filter((b) => b.data.pinned),
+  ...published.filter((b) => !b.data.pinned),
+];
 
 // 1. 标签计数
 const tagCounts = new Map<string, number>();
@@ -138,9 +139,17 @@ const archiveTree: ArchiveYear[] = [...archiveMap.values()]
                 >
                   <a
                     href={`/blog/${blog.data.slug}`}
-                    class="card group block p-4 md:p-6"
+                    class="card group relative block p-4 md:p-6"
                   >
                     <span class="card-notch" aria-hidden="true" />
+                    {blog.data.pinned && (
+                      <span
+                        class="bg-accent font-heading absolute -top-2.5 left-4 -skew-x-12 border border-black px-2 py-0.5 text-xs tracking-widest text-white"
+                        aria-label="置顶"
+                      >
+                        PINNED
+                      </span>
+                    )}
 
                     <div class="grid grid-cols-1 gap-2 md:grid-cols-4 md:gap-6">
                       <time
@@ -246,6 +255,26 @@ const archiveTree: ArchiveYear[] = [...archiveMap.values()]
     const noPosts = document.getElementById("no-posts");
     const showingCount = document.getElementById("showing-count");
 
+    // URL 是初始筛选状态的唯一事实来源（?tag=Pwn&date=2026-03）——
+    // 文章页的标签贴纸带参跳过来、收藏/分享的筛选链接都从这里进
+    {
+      const params = new URLSearchParams(location.search);
+      const tag = params.get("tag");
+      const date = params.get("date");
+      // 校验参数确实存在对应按钮，乱值回落 all
+      currentTag =
+        tag &&
+        document.querySelector(`.blog-tag[data-tag="${CSS.escape(tag)}"]`)
+          ? tag
+          : "all";
+      currentDate =
+        date &&
+        document.querySelector(`.date-filter[data-date="${CSS.escape(date)}"]`)
+          ? date
+          : "all";
+      if (currentDate !== "all") expandYear(currentDate.split("-")[0]);
+    }
+
     function matchesDate(postDate: string) {
       if (currentDate === "all") return true;
       // 四位是年份，否则是 YYYY-MM
@@ -270,6 +299,22 @@ const archiveTree: ArchiveYear[] = [...archiveMap.values()]
       if (showingCount) showingCount.textContent = String(visible);
 
       syncUI();
+      syncURL();
+    }
+
+    // 筛选状态写回地址栏 —— 可分享/可收藏。
+    // 用 replaceState 而非 pushState：外来历史条目会让 ClientRouter
+    // 在后退时整页重载（后退回到上一页面，而不是上一个筛选状态）
+    function syncURL() {
+      const params = new URLSearchParams();
+      if (currentTag !== "all") params.set("tag", currentTag);
+      if (currentDate !== "all") params.set("date", currentDate);
+      const query = params.toString();
+      history.replaceState(
+        history.state,
+        "",
+        query ? `${location.pathname}?${query}` : location.pathname,
+      );
     }
 
     function syncUI() {
@@ -313,8 +358,10 @@ const archiveTree: ArchiveYear[] = [...archiveMap.values()]
       });
     }
 
-    // 标签点击（事件委托，覆盖两套面板）
-    document.addEventListener("click", (event) => {
+    // 标签点击（事件委托，覆盖两套面板）。
+    // 挂 body 而不是 document：ClientRouter 换页会整体替换 body，
+    // 旧监听随之消亡，重访 /blog 重绑时不会累积
+    document.body.addEventListener("click", (event) => {
       const target = (event.target as HTMLElement | null)?.closest<HTMLElement>(
         ".blog-tag",
       );
@@ -324,7 +371,7 @@ const archiveTree: ArchiveYear[] = [...archiveMap.values()]
     });
 
     // 时间点击：年按钮同时负责展开/收起
-    document.addEventListener("click", (event) => {
+    document.body.addEventListener("click", (event) => {
       const target = (event.target as HTMLElement | null)?.closest<HTMLElement>(
         ".date-filter",
       );

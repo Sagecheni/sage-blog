@@ -1,34 +1,106 @@
 ---
-import { render, getCollection } from "astro:content";
+import { render } from "astro:content";
 import BlogLayout from "../../layouts/BlogLayout.astro";
+import { getPublishedBlogs, readTimeOf, lastModOf } from "../../data/blog";
 import type { BlogType } from "../../content.config";
 
 export async function getStaticPaths() {
-  const blogs: BlogType[] = await getCollection("blogs");
-  const blogs_ = blogs
-    .map((blog) => {
-      const words = (blog.body ?? "").split(/\s+/).filter(Boolean).length;
-      const minutes = Math.ceil(words / 200);
-
-      return { ...blog, data: { ...blog.data, readTime: minutes } };
-    })
-    .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+  // getPublishedBlogs：生产构建过滤未来日期（定时发布）+ 按日期降序
+  const published = await getPublishedBlogs();
+  const blogs_ = published.map((blog) => ({
+    ...blog,
+    data: { ...blog.data, readTime: readTimeOf(blog) },
+  }));
 
   // 文末的上/下一篇：按发布时间排；上一篇 = 更早的一篇，下一篇 = 更新的一篇
   const link = (blog?: BlogType) =>
     blog ? { slug: blog.data.slug, title: blog.data.title } : null;
 
-  return blogs_.map((blog: BlogType, index: number) => ({
-    params: { slug: blog.data.slug },
-    props: {
-      blog,
-      older: link(blogs_[index + 1]),
-      newer: link(blogs_[index - 1]),
-    },
-  }));
+  // 系列：同名 series 按日期升序 —— 连载本来就按时间写，不引入手工排序字段
+  function seriesOf(blog: BlogType) {
+    const name = blog.data.series;
+    if (!name) return null;
+
+    const members = blogs_
+      .filter((b) => b.data.series === name)
+      .sort((a, b) => a.data.date.getTime() - b.data.date.getTime());
+
+    // 只有一篇时不渲染系列卡 ——「第 1/1 篇」是噪音；第二篇上线后自然出现
+    if (members.length < 2) return null;
+
+    const index = members.findIndex((b) => b.data.slug === blog.data.slug);
+    return {
+      name,
+      index: index + 1,
+      total: members.length,
+      posts: members.map((b) => ({
+        slug: b.data.slug,
+        title: b.data.title,
+        current: b.data.slug === blog.data.slug,
+      })),
+    };
+  }
+
+  // 相关文章：标签交集打分。排除自身 / 同系列（系列卡已覆盖）/
+  // 上下一篇（避免与相邻导航重复展示）。为空就为空 —— 宁缺勿滥
+  function relatedOf(blog: BlogType, index: number) {
+    const excluded = new Set(
+      [
+        blog.data.slug,
+        blogs_[index + 1]?.data.slug,
+        blogs_[index - 1]?.data.slug,
+      ].filter(Boolean),
+    );
+    const own = new Set(blog.data.tags);
+
+    return blogs_
+      .filter(
+        (b) =>
+          !excluded.has(b.data.slug) &&
+          !(blog.data.series && b.data.series === blog.data.series),
+      )
+      .map((b) => ({
+        blog: b,
+        sharedTags: b.data.tags.filter((tag) => own.has(tag)),
+      }))
+      .filter((entry) => entry.sharedTags.length > 0)
+      .sort(
+        (a, b) =>
+          b.sharedTags.length - a.sharedTags.length ||
+          b.blog.data.date.getTime() - a.blog.data.date.getTime(),
+      )
+      .slice(0, 3)
+      .map((entry) => ({
+        slug: entry.blog.data.slug,
+        title: entry.blog.data.title,
+        date: entry.blog.data.date,
+        sharedTags: entry.sharedTags,
+      }));
+  }
+
+  return blogs_.map((blog: BlogType, index: number) => {
+    // 「更新于」只有和发布日差 24h 以上才值得展示
+    const lastMod = lastModOf(blog);
+    const modDate =
+      lastMod && lastMod.getTime() - blog.data.date.getTime() > 86_400_000
+        ? lastMod
+        : null;
+
+    return {
+      params: { slug: blog.data.slug },
+      props: {
+        blog,
+        modDate,
+        older: link(blogs_[index + 1]),
+        newer: link(blogs_[index - 1]),
+        series: seriesOf(blog),
+        related: relatedOf(blog, index),
+      },
+    };
+  });
 }
 
-const { blog, older, newer } = Astro.props;
+const { blog, modDate, older, newer, series, related } = Astro.props;
 const { Content, headings } = await render(blog);
 ---
 
@@ -36,8 +108,11 @@ const { Content, headings } = await render(blog);
   frontmatter={blog.data}
   headings={headings}
   readTime={blog.data.readTime}
+  modDate={modDate}
   older={older}
   newer={newer}
+  series={series}
+  related={related}
 >
   <Content />
 </BlogLayout>
