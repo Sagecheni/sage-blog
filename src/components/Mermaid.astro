@@ -1,15 +1,23 @@
+---
+// mermaid 及其图表分片加起来约 1.5MB。原先是静态 import，
+// 结果没有任何图表的文章也要全额下载。改成先查 DOM 命中 .mermaid 再动态 import，
+// Vite 会拆成独立 chunk，用不到就不发请求。
+---
+
 <script>
-  import mermaid from 'mermaid';
-  
-  document.addEventListener('astro:page-load', () => {
-    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
-    mermaid.run({
-        querySelector: '.mermaid'
+  async function renderMermaid() {
+    if (!document.querySelector(".mermaid")) return;
+
+    const { default: mermaid } = await import("mermaid");
+    const dark = document.documentElement.classList.contains("dark");
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark ? "dark" : "neutral",
     });
-  });
-  
-  // Also run on initial load if view transitions aren't used or for first paint
-  if (!document.startViewTransition) {
-      mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    await mermaid.run({ querySelector: ".mermaid" });
   }
+
+  document.addEventListener("DOMContentLoaded", renderMermaid);
+  document.addEventListener("astro:page-load", renderMermaid);
 </script>

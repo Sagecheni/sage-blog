@@ -1,20 +1,39 @@
 ---
+import { getImage } from "astro:assets";
+import { site } from "../data/site";
+import ogSource from "../assets/images/character6.jpeg";
+
 export interface Props {
   title: string;
   description?: string;
+  /** 页面绝对地址；不传则按当前路径推导 */
   url?: string;
   author?: string;
-  canonicalURL?: string;
   pubDate?: Date;
 }
 
 const {
-  title = "Ryze",
-  description = "A minimalist Astro starter for mini blogs.",
-  author = "Rahul",
-  canonicalURL = new URL(Astro.url.pathname, Astro.url),
+  title = site.title,
+  description = site.description,
+  author = site.author,
+  url,
   pubDate,
 } = Astro.props;
+
+// url 传了就用它，否则按当前路径推导（原实现里 url prop 声明了却从未被使用）
+const canonicalURL = new URL(url ?? Astro.url.pathname, Astro.site ?? site.url);
+
+// OG 卡片要 1.91:1，源图是竖构图，这里裁出 1200×630
+const og = await getImage({
+  src: ogSource,
+  width: 1200,
+  height: 630,
+  format: "jpeg",
+  quality: 80,
+  fit: "cover",
+  position: "attention",
+});
+const ogURL = new URL(og.src, Astro.site ?? site.url);
 ---
 
 <!-- general -->
@@ -27,13 +46,19 @@ const {
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonicalURL} />
-<meta property="og:type" content="website" />
-<meta property="og:site_name" content="Ryze" />
+<meta property="og:type" content={pubDate ? "article" : "website"} />
+<meta property="og:site_name" content={site.title} />
+<meta property="og:locale" content={site.locale} />
+<meta property="og:image" content={ogURL} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={title} />
 
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:url" content={canonicalURL} />
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
+<meta property="twitter:image" content={ogURL} />
 
 {
   pubDate && (
@@ -46,19 +71,11 @@ const {
 <link
   rel="alternate"
   type="application/rss+xml"
-  title="Ryze"
-  href={new URL("rss.xml", Astro.site)}
+  title={site.title}
+  href={new URL("rss.xml", Astro.site ?? site.url)}
 />
 
 <meta
   name="google-site-verification"
   content={import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION}
 />
-
-<!-- Cloudflare Web Analytics (async to avoid blocking) -->
-<!-- <script
-  async
-  src="https://static.cloudflareinsights.com/beacon.min.js"
-  data-cf-beacon='{"token": "e6aeb2075b0e4bc79e63131cf8cd1c33", "timeout": 5000}'
-></script> -->
-<!-- End Cloudflare Web Analytics -->

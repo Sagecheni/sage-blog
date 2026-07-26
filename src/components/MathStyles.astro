@@ -1,0 +1,5 @@
+---
+// 把 KaTeX 样式从全站 CSS 里隔离出来：只有引用了本组件的路由（文章页）才会加载它。
+// rehype-katex 在构建期就把公式渲染成静态 HTML，所以这里只需要样式，不需要任何客户端 JS。
+import "katex/dist/katex.min.css";
+---
