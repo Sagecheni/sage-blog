@@ -12,6 +12,7 @@ import { remarkWikiLink } from "./src/plugins/remark-wiki-link.mjs";
 import { rehypeImageFigure } from "./src/plugins/rehype-image-figure.mjs";
 import { rehypeTableWrap } from "./src/plugins/rehype-table-wrap.mjs";
 import { optimizedImageDomains } from "./src/data/image-domains.mjs";
+import { sitemapLastmodSerializer } from "./src/plugins/sitemap-lastmod.mjs";
 import remarkDirective from "remark-directive";
 import { remarkDirectiveHandle } from "./src/plugins/remark-directive-rehype.js";
 import { rehypeCitationFrontmatter } from "./src/plugins/rehype-citation-frontmatter.mjs";
@@ -28,7 +29,13 @@ export default defineConfig({
   devToolbar: {
     enabled: true,
   },
-  integrations: [react(), sitemap(), expressiveCode(), mdx()],
+  integrations: [
+    react(),
+    // 文章页带 git lastmod（≥2 次提交才标，浅克隆 CI 安全降级）
+    sitemap({ serialize: sitemapLastmodSerializer() }),
+    expressiveCode(),
+    mdx(),
+  ],
 
   image: {
     // 授权 COS bucket：构建期下载→优化→产物自带 width/height + srcset，

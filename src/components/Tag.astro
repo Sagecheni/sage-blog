@@ -4,9 +4,11 @@ export interface Props {
   /** 传入则渲染为链接（如跳到列表页筛选）；
       注意：放在 <a> 卡片内部时必须省略 —— 嵌套链接不合法 */
   href?: string;
+  /** Pagefind 过滤键（如 "tag"）—— 让搜索弹层能按此标签过滤 */
+  filterKey?: string;
 }
 
-const { name, href } = Astro.props;
+const { name, href, filterKey } = Astro.props;
 
 // 按标签名哈希出倾斜角与配色 —— 用名字而不是数组下标，
 // 同一个标签在列表页和文章页才会长得一样
@@ -20,6 +22,7 @@ const Element = href ? "a" : "span";
 
 <Element
   href={href}
+  data-pagefind-filter={filterKey}
   class:list={[
     "inline-block -skew-x-12 border-2 px-2 py-0.5 text-xs font-bold tracking-wide transition-transform duration-200 hover:scale-110 hover:rotate-0",
     rotation,

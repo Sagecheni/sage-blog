@@ -37,6 +37,15 @@
       </button>
     </div>
 
+    {/* 标签过滤胶囊（Pagefind filters，打开弹层后填充） */}
+    <div
+      id="search-filters"
+      class="mt-3 flex flex-wrap gap-2 empty:hidden"
+      role="group"
+      aria-label="按标签过滤"
+    >
+    </div>
+
     {/* 状态行 */}
     <p
       id="search-status"
@@ -122,7 +131,11 @@
   };
   type Pagefind = {
     init?: () => void;
-    search: (query: string) => Promise<{ results: PagefindResult[] }>;
+    search: (
+      query: string | null,
+      options?: { filters?: { tag?: { any: string[] } } },
+    ) => Promise<{ results: PagefindResult[] }>;
+    filters?: () => Promise<Record<string, Record<string, number>>>;
   };
 
   // ── 模块级状态：跨 ClientRouter 换页存活（模块只执行一次）──
@@ -131,6 +144,8 @@
   let loadFailed = false;
   let activeIndex = -1;
   let debounceTimer = 0;
+  // 已选标签过滤（跨换页保持，与 pagefind 缓存同生命周期）
+  const selectedTags = new Set<string>();
 
   // 元素全部实时查询 —— 换页后 body 是新的，闭包捕获旧元素会失效
   const getOverlay = () => document.getElementById("search-overlay");
@@ -138,6 +153,7 @@
     document.getElementById("search-input") as HTMLInputElement | null;
   const getStatus = () => document.getElementById("search-status");
   const getList = () => document.getElementById("search-results");
+  const getFilters = () => document.getElementById("search-filters");
 
   async function loadPagefind(): Promise<Pagefind | null> {
     if (pagefind || loadFailed) return pagefind;
@@ -158,6 +174,36 @@
     return pagefind;
   }
 
+  // ── 标签过滤胶囊：索引里的 tag filter 值 → 可点选的 .blog-tag 胶囊 ──
+  async function renderFilterChips() {
+    const container = getFilters();
+    if (!container || container.childElementCount > 0) return;
+    const pf = await loadPagefind();
+    if (!pf?.filters) return;
+
+    const filters = await pf.filters();
+    const tags = Object.entries(filters.tag ?? {}).sort((a, b) => b[1] - a[1]);
+    for (const [tag, count] of tags) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "blog-tag";
+      btn.classList.toggle("active", selectedTags.has(tag));
+      btn.innerHTML = `<span class="tag-name"></span><span class="tag-count"></span>`;
+      btn.querySelector(".tag-name")!.textContent = tag;
+      btn.querySelector(".tag-count")!.textContent = String(count);
+      btn.addEventListener("click", () => {
+        if (selectedTags.has(tag)) selectedTags.delete(tag);
+        else selectedTags.add(tag);
+        btn.classList.toggle("active", selectedTags.has(tag));
+        runActiveSearch();
+      });
+      container.append(btn);
+    }
+  }
+
+  // 当前弹层里的 runSearch 引用（initSearch 每页重建）
+  let runActiveSearch = () => {};
+
   function setOpen(open: boolean) {
     const overlay = getOverlay();
     const input = getInput();
@@ -167,7 +213,7 @@
     if (open) {
       input.focus();
       input.select();
-      loadPagefind();
+      loadPagefind().then(renderFilterChips);
     }
   }
 
@@ -223,7 +269,8 @@
 
     async function runSearch() {
       const query = input.value.trim();
-      if (!query) {
+      // 没词也没选标签才是真·空状态；只选了标签 = 按标签浏览全部
+      if (!query && selectedTags.size === 0) {
         list.innerHTML = "";
         activeIndex = -1;
         if (!loadFailed) status.textContent = "输入关键词开始搜索";
@@ -233,7 +280,12 @@
       const pf = await loadPagefind();
       if (!pf) return;
 
-      const res = await pf.search(query);
+      const filters =
+        selectedTags.size > 0
+          ? { filters: { tag: { any: [...selectedTags] } } }
+          : undefined;
+      // Pagefind：query 传 null 表示「仅按过滤器列出」
+      const res = await pf.search(query || null, filters);
       const top = await Promise.all(
         res.results.slice(0, 8).map((r) => r.data()),
       );
@@ -245,7 +297,9 @@
       activeIndex = -1;
 
       if (!top.length) {
-        status.textContent = `没有找到「${query}」相关的内容`;
+        status.textContent = query
+          ? `没有找到「${query}」相关的内容`
+          : "所选标签下没有文章";
         return;
       }
 
@@ -271,6 +325,9 @@
 
       setActive(0);
     }
+
+    // 让模块级的过滤胶囊回调能触发本页的 runSearch
+    runActiveSearch = runSearch;
 
     input.addEventListener("input", () => {
       clearTimeout(debounceTimer);

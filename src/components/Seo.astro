@@ -104,6 +104,12 @@ const jsonLd = pubDate
   title={site.title}
   href={new URL("rss.xml", Astro.site ?? site.url)}
 />
+<link
+  rel="alternate"
+  type="application/feed+json"
+  title={site.title}
+  href={new URL("feed.json", Astro.site ?? site.url)}
+/>
 
 <meta
   name="google-site-verification"
