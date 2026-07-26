@@ -39,7 +39,11 @@ const { frontmatter, readTime, headings, older, newer } = Astro.props;
       </div>
     </aside>
 
-    <article class="pb-8">
+    {
+      /* data-pagefind-body：全站只索引文章正文（一旦任何页面声明了它，
+        Pagefind 就只收录声明过的区域，导航/页脚/列表页自动排除） */
+    }
+    <article class="pb-8" data-pagefind-body>
       <Title frontmatter={frontmatter} readTime={readTime} />
       <section class="markdown">
         <slot />

@@ -72,6 +72,9 @@ const { frontmatter, readTime } = Astro.props;
       }
     </div>
 
-    <CopyButton client:idle />
+    {/* 按钮文案不该进搜索索引 */}
+    <div data-pagefind-ignore>
+      <CopyButton client:idle />
+    </div>
   </div>
 </header>

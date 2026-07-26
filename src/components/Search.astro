@@ -1,0 +1,300 @@
+---
+// 站内搜索弹层。索引由构建脚本的 `pagefind --site dist` 生成，
+// 运行时按需 import /pagefind/pagefind.js —— 打开弹层才加载，首屏零开销。
+// dev server 下没有索引产物，会降级显示提示。
+---
+
+<div
+  id="search-overlay"
+  class="bg-background/95 pointer-events-none fixed inset-0 z-[70] opacity-0 backdrop-blur-sm transition-opacity duration-200"
+  role="dialog"
+  aria-modal="true"
+  aria-label="站内搜索"
+>
+  <div class="mx-auto flex h-full max-w-2xl flex-col px-4 pt-[12vh] pb-8">
+    {/* 输入行 */}
+    <div class="flex items-stretch gap-0">
+      <span
+        class="bg-accent font-heading flex -skew-x-12 items-center border-2 border-black px-3 text-lg tracking-wider text-white select-none"
+        aria-hidden="true"
+      >
+        SEARCH
+      </span>
+      <input
+        id="search-input"
+        type="search"
+        placeholder="搜索文章…"
+        autocomplete="off"
+        spellcheck="false"
+        class="border-foreground bg-surface text-foreground placeholder:text-foreground-secondary focus:border-accent min-w-0 flex-1 border-2 border-l-0 px-4 py-2 text-lg outline-none"
+      />
+      <button
+        id="search-close"
+        class="border-foreground hover:border-accent hover:text-accent ml-2 border-2 px-3 font-mono text-sm transition-colors"
+        aria-label="关闭搜索"
+      >
+        ESC
+      </button>
+    </div>
+
+    {/* 状态行 */}
+    <p
+      id="search-status"
+      class="text-foreground-secondary mt-3 font-mono text-xs tracking-wider"
+      aria-live="polite"
+    >
+      输入关键词开始搜索
+    </p>
+
+    {/* 结果列表 */}
+    <ul
+      id="search-results"
+      class="mt-3 flex-1 space-y-2 overflow-y-auto pr-1"
+      role="listbox"
+      aria-label="搜索结果"
+    >
+    </ul>
+
+    {/* 快捷键提示 */}
+    <p
+      class="text-foreground-secondary mt-4 hidden font-mono text-xs tracking-wider select-none sm:block"
+    >
+      ↑↓ 选择 · ⏎ 打开 · ESC 关闭
+    </p>
+  </div>
+</div>
+
+<style>
+  /* 命中高亮：Pagefind 摘要里的 <mark> */
+  #search-results :global(mark) {
+    background-color: var(--accent);
+    color: #ffffff;
+    padding: 0 2px;
+  }
+
+  #search-results :global(.search-hit) {
+    display: block;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border);
+    background-color: var(--surface);
+    transition:
+      border-color 150ms var(--motion-ease-standard),
+      transform 150ms var(--motion-ease-standard);
+  }
+
+  #search-results :global(.search-hit.is-active),
+  #search-results :global(.search-hit:hover) {
+    border-color: var(--accent);
+    transform: translateX(4px);
+  }
+
+  #search-results :global(.search-hit-title) {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+    color: var(--foreground);
+  }
+
+  #search-results :global(.search-hit.is-active .search-hit-title) {
+    color: var(--accent);
+  }
+
+  #search-results :global(.search-hit-excerpt) {
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--foreground-secondary);
+  }
+
+  #search-overlay.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>
+
+<script>
+  type PagefindResult = {
+    data: () => Promise<{
+      url: string;
+      excerpt: string;
+      meta: { title?: string };
+    }>;
+  };
+  type Pagefind = {
+    init?: () => void;
+    search: (query: string) => Promise<{ results: PagefindResult[] }>;
+  };
+
+  function initSearch() {
+    const overlay = document.getElementById("search-overlay");
+    const input = document.getElementById(
+      "search-input",
+    ) as HTMLInputElement | null;
+    const status = document.getElementById("search-status");
+    const list = document.getElementById("search-results");
+    if (!overlay || !input || !status || !list) return;
+    if (overlay.dataset.bound === "true") return;
+    overlay.dataset.bound = "true";
+
+    let pagefind: Pagefind | null = null;
+    let loadFailed = false;
+    let activeIndex = -1;
+    let debounceTimer = 0;
+
+    async function loadPagefind(): Promise<Pagefind | null> {
+      if (pagefind || loadFailed) return pagefind;
+      try {
+        // 索引产物只存在于构建后的 dist。路径必须是变量 ——
+        // 字符串字面量会被 Rollup 静态解析并因不存在而构建失败，
+        // @vite-ignore 只拦 Vite 不拦 Rollup
+        const indexUrl = "/pagefind/pagefind.js";
+        pagefind = (await import(/* @vite-ignore */ indexUrl)) as Pagefind;
+        pagefind.init?.();
+      } catch {
+        loadFailed = true;
+        status!.textContent =
+          "本地 dev 没有搜索索引 —— 跑 npm run build && npm run preview 后可用";
+      }
+      return pagefind;
+    }
+
+    function setOpen(open: boolean) {
+      overlay!.classList.toggle("is-open", open);
+      document.documentElement.style.overflow = open ? "hidden" : "";
+      if (open) {
+        input!.focus();
+        input!.select();
+        loadPagefind();
+      }
+    }
+
+    const isOpen = () => overlay!.classList.contains("is-open");
+
+    function setActive(index: number) {
+      const hits = [...list!.querySelectorAll<HTMLElement>(".search-hit")];
+      if (!hits.length) return;
+      activeIndex = (index + hits.length) % hits.length;
+      hits.forEach((hit, i) => {
+        hit.classList.toggle("is-active", i === activeIndex);
+        hit.setAttribute("aria-selected", String(i === activeIndex));
+      });
+      hits[activeIndex].scrollIntoView({ block: "nearest" });
+    }
+
+    async function runSearch() {
+      const query = input!.value.trim();
+      if (!query) {
+        list!.innerHTML = "";
+        activeIndex = -1;
+        if (!loadFailed) status!.textContent = "输入关键词开始搜索";
+        return;
+      }
+
+      const pf = await loadPagefind();
+      if (!pf) return;
+
+      const res = await pf.search(query);
+      const top = await Promise.all(
+        res.results.slice(0, 8).map((r) => r.data()),
+      );
+
+      // 输入可能在 await 期间变了，丢弃过期结果
+      if (input!.value.trim() !== query) return;
+
+      list!.innerHTML = "";
+      activeIndex = -1;
+
+      if (!top.length) {
+        status!.textContent = `没有找到「${query}」相关的内容`;
+        return;
+      }
+
+      status!.textContent = `${res.results.length} 条结果`;
+
+      for (const hit of top) {
+        const li = document.createElement("li");
+        li.setAttribute("role", "option");
+        const a = document.createElement("a");
+        a.href = hit.url;
+        a.className = "search-hit";
+        const title = document.createElement("span");
+        title.className = "search-hit-title";
+        title.textContent = hit.meta.title ?? hit.url;
+        const excerpt = document.createElement("p");
+        excerpt.className = "search-hit-excerpt";
+        // 摘要来自 Pagefind 对自家构建产物的切片，<mark> 高亮需要按 HTML 渲染
+        excerpt.innerHTML = hit.excerpt;
+        a.append(title, excerpt);
+        li.append(a);
+        list!.append(li);
+      }
+
+      setActive(0);
+    }
+
+    input.addEventListener("input", () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(runSearch, 150);
+    });
+
+    input.addEventListener("keydown", (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setActive(activeIndex + 1);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setActive(activeIndex - 1);
+      } else if (event.key === "Enter") {
+        const active = list!.querySelector<HTMLAnchorElement>(
+          ".search-hit.is-active",
+        );
+        if (active) window.location.href = active.href;
+      }
+    });
+
+    // 打开入口：导航按钮 + Cmd/Ctrl+K + 斜杠
+    document.getElementById("search-open")?.addEventListener("click", () => {
+      setOpen(true);
+    });
+
+    document.addEventListener("keydown", (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setOpen(!isOpen());
+        return;
+      }
+      if (event.key === "Escape" && isOpen()) {
+        setOpen(false);
+        return;
+      }
+      // 斜杠唤起：焦点在输入类控件里时不劫持
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+      if (event.key === "/" && !typing && !isOpen()) {
+        event.preventDefault();
+        setOpen(true);
+      }
+    });
+
+    document.getElementById("search-close")?.addEventListener("click", () => {
+      setOpen(false);
+    });
+
+    // 点结果导航前先解锁滚动（MPA 整页跳转）
+    list.addEventListener("click", () => {
+      document.documentElement.style.overflow = "";
+    });
+
+    // 点遮罩空白处关闭
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) setOpen(false);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initSearch);
+  document.addEventListener("astro:page-load", initSearch);
+</script>

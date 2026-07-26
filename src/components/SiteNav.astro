@@ -72,6 +72,26 @@ const links = [
         }
       </ul>
 
+      {/* 搜索 */}
+      <button
+        id="search-open"
+        class="border-border hover:border-accent hover:text-accent flex h-9 w-9 items-center justify-center border-2 transition-colors"
+        aria-label="搜索（Cmd+K）"
+        title="搜索（Cmd+K）"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          aria-hidden="true"
+        >
+          <circle cx="10.5" cy="10.5" r="6.5"></circle>
+          <path d="M15.5 15.5 L21 21" stroke-linecap="square"></path>
+        </svg>
+      </button>
+
       {/* RSS — 旋转星形 */}
       <a
         href="/rss.xml"
