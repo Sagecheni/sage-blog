@@ -248,6 +248,13 @@
     img {
       @apply border-border h-auto max-w-full border-2 transition-all duration-150 ease-in-out group-hover:brightness-75;
     }
+    /* 暗色阅读舒适：正文图默认压暗一档，hover 恢复全亮 */
+    html.dark & img {
+      filter: brightness(0.88);
+    }
+    html.dark & figure:hover img {
+      filter: brightness(1);
+    }
     iframe {
       @apply border-border my-8 border-2 select-none;
     }

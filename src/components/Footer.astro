@@ -17,16 +17,52 @@ const wordsLabel =
     : `${totalWords} 字`;
 ---
 
-<footer class="mx-auto w-full max-w-[1280px] px-4 pt-16 pb-8 print:hidden">
+<footer
+  class="relative mx-auto w-full max-w-[1280px] overflow-hidden px-4 pt-16 pb-8 print:hidden"
+>
+  {/* 超大水印字 —— 压在页脚底部，2.5% 前景色 */}
+  <div
+    class="font-heading pointer-events-none absolute -bottom-7 left-1/2 -translate-x-1/2 text-[clamp(4rem,14vw,10rem)] leading-none tracking-[0.06em] whitespace-nowrap select-none"
+    style="color: color-mix(in srgb, var(--foreground) 3.5%, transparent);"
+    aria-hidden="true"
+  >
+    SAGE FORGE
+  </div>
+
   {/* P5R 斜切分隔线 */}
-  <div class="mb-6 flex items-center gap-3" aria-hidden="true">
+  <div class="mb-5 flex items-center gap-3" aria-hidden="true">
     <span class="bg-accent h-0.5 flex-1 -skew-x-12"></span>
     <span class="bg-accent block h-2 w-2 rotate-45"></span>
     <span class="bg-accent h-0.5 flex-1 -skew-x-12"></span>
   </div>
 
+  {/* 快捷导航 */}
+  <nav
+    aria-label="页脚导航"
+    class="relative mb-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm"
+  >
+    {
+      [
+        ["/blog", "博客"],
+        ["/archive", "归档"],
+        ["/series", "系列"],
+        ["/footprints", "足迹"],
+        ["/friends", "友链"],
+        ["/about", "关于"],
+        ["/rss.xml", "RSS"],
+      ].map(([href, label]) => (
+        <a
+          href={href}
+          class="text-foreground-secondary hover:text-accent transition-colors"
+        >
+          {label}
+        </a>
+      ))
+    }
+  </nav>
+
   <div
-    class="text-foreground-secondary flex flex-col items-center justify-between gap-3 text-sm select-none sm:flex-row"
+    class="text-foreground-secondary relative flex flex-col items-center justify-between gap-3 text-sm select-none sm:flex-row"
   >
     <p class="flex flex-wrap items-center gap-x-3 gap-y-1">
       <span>© {year} MIT License</span>

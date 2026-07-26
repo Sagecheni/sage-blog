@@ -11,25 +11,73 @@ import notFoundImage from "../assets/images/404.png";
   url="https://blog.sagec.fun/404"
 >
   <div
-    class="mx-auto flex min-h-[60vh] max-w-[1280px] flex-col items-center justify-center gap-8 px-4 py-16"
+    class="relative mx-auto flex min-h-[70vh] max-w-[1280px] flex-col items-center justify-center gap-8 overflow-hidden px-4 py-16"
   >
-    <Image
-      src={notFoundImage}
-      alt="没有找到该页面"
-      class="border-border h-auto w-full max-w-[600px] border-2 object-cover shadow-[8px_8px_0_var(--accent)]"
-    />
-
-    <h1
-      class="font-heading text-foreground text-4xl tracking-widest md:text-5xl"
+    {/* 背景装饰：巨大 404 水印 + 散点星 */}
+    <div
+      class="font-heading pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[clamp(12rem,40vw,28rem)] leading-none select-none"
+      style="color: color-mix(in srgb, var(--accent) 5%, transparent);"
+      aria-hidden="true"
     >
-      404 — 没有找到该页面
-    </h1>
-
-    <a
-      href="/"
-      class="border-foreground hover:bg-accent hover:border-accent -skew-x-12 border-2 px-8 py-2 text-lg font-bold transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
+      404
+    </div>
+    <svg
+      viewBox="0 0 64 64"
+      class="text-accent pointer-events-none absolute top-[12%] left-[12%] h-10 w-10 rotate-12 opacity-30"
+      aria-hidden="true"
     >
-      <span class="block skew-x-12">返回首页</span>
-    </a>
+      <path
+        d="M32 4 L39 24 L60 24 L43 37 L49 58 L32 45 L15 58 L21 37 L4 24 L25 24 Z"
+        fill="currentColor"></path>
+    </svg>
+    <svg
+      viewBox="0 0 64 64"
+      class="text-foreground pointer-events-none absolute right-[15%] bottom-[18%] h-7 w-7 -rotate-6 opacity-20"
+      aria-hidden="true"
+    >
+      <path
+        d="M32 4 L39 24 L60 24 L43 37 L49 58 L32 45 L15 58 L21 37 L4 24 L25 24 Z"
+        fill="currentColor"></path>
+    </svg>
+
+    {/* 主体 —— 宽度约束放包装层，避免与 Astro 图片响应式样式互相干扰 */}
+    <div class="relative w-full max-w-[480px] -rotate-1">
+      <span
+        class="bg-accent font-heading absolute -top-4 -left-3 z-10 -skew-x-12 border-2 border-black px-3 py-0.5 text-sm tracking-widest text-white"
+      >
+        TARGET LOST
+      </span>
+      <Image
+        src={notFoundImage}
+        alt="没有找到该页面"
+        class="border-border h-auto w-full border-2 object-cover shadow-[8px_8px_0_var(--accent)]"
+      />
+    </div>
+
+    <div class="relative text-center">
+      <h1
+        class="font-heading text-foreground text-3xl tracking-widest md:text-4xl"
+      >
+        这一页被怪盗偷走了
+      </h1>
+      <p class="text-foreground-secondary mt-2 font-mono text-sm">
+        404 · PAGE NOT FOUND
+      </p>
+    </div>
+
+    <div class="relative flex flex-wrap items-center justify-center gap-3">
+      <a
+        href="/"
+        class="bg-accent border-foreground -skew-x-12 border-2 px-8 py-2 text-lg font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_var(--foreground)]"
+      >
+        <span class="block skew-x-12">返回首页</span>
+      </a>
+      <a
+        href="/blog"
+        class="border-foreground hover:bg-accent hover:border-accent -skew-x-12 border-2 px-8 py-2 text-lg font-bold transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
+      >
+        <span class="block skew-x-12">去看文章</span>
+      </a>
+    </div>
   </div>
 </BaseLayout>
