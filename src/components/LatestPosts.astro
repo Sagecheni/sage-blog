@@ -20,9 +20,12 @@ const posts = published.slice(0, limit).map((blog) => ({
 
 <div class="post-list flex flex-col gap-1">
   {
-    posts.map((post) => (
+    posts.map((post, index) => (
       <a href={`/blog/${post.slug}`} class="latest-post-row">
         <span class="bloom" aria-hidden="true" />
+        <span class="post-index" aria-hidden="true">
+          {String(index + 1).padStart(2, "0")}
+        </span>
         <h3
           class="post-title m-0 text-base"
           transition:name={`post-title-${post.slug}`}

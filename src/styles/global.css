@@ -16,8 +16,9 @@
 .dark {
   /* P5R Dark: Pure Black, White Text, Bold Red Accent */
   --background: #000000;
-  --surface: #0d0d0d;
-  --surface-deep: #080808;
+  /* surface 与纯黑背景拉开一档，否则暗色下卡片和底几乎无差 */
+  --surface: #121216;
+  --surface-deep: #0a0a0d;
   --foreground: #ffffff;
   --foreground-secondary: rgba(255, 255, 255, 0.62);
   --primary: #d8000c;
@@ -942,6 +943,12 @@ html.js .landing-section.is-visible {
   position: relative;
   border: 2px solid var(--border);
   background-color: var(--surface);
+  /* P5R 菜单同款对角细条纹 —— 治「一片死黑」的关键质感层 */
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 10px,
+    color-mix(in srgb, var(--foreground) 2.5%, transparent) 10px 11px
+  );
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-hard);
   transition:
@@ -956,6 +963,31 @@ a.card:hover,
   border-color: var(--accent);
   box-shadow: var(--shadow-hard-accent);
   transform: translate(-2px, -2px);
+}
+
+/* halftone 网点装饰角 —— P5R 漫画印刷质感，配合 mask 向外渐隐 */
+.halftone {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  pointer-events: none;
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--accent) 50%, transparent) 1.5px,
+    transparent 1.5px
+  );
+  background-size: 8px 8px;
+}
+
+.halftone.tl {
+  top: -6px;
+  left: -6px;
+  mask-image: radial-gradient(circle at 0 0, #000 25%, transparent 72%);
+}
+
+.halftone.br {
+  right: -6px;
+  bottom: -6px;
+  mask-image: radial-gradient(circle at 100% 100%, #000 25%, transparent 72%);
 }
 
 /* 卡片右上角的 P5R 切角装饰 */
@@ -1112,7 +1144,17 @@ a.card:hover,
   transform: translateX(0);
 }
 
+/* P5R 菜单式编号 */
+.latest-post-row .post-index {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  opacity: 0.85;
+}
+
 .latest-post-row .post-title {
+  flex: 1;
   font-weight: 700;
   transition: color 250ms var(--motion-ease-standard);
 }

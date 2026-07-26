@@ -36,7 +36,12 @@ const socials = [
   <script type="application/ld+json" set:html={websiteLd} />
   <Hero />
 
-  <div class="mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-4 py-8">
+  <div
+    class="relative mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-4 py-8"
+  >
+    {/* 低饱和红斜带 —— P5R 菜单的构图层，卡片浮在上面 */}
+    <div class="home-band" aria-hidden="true"></div>
+
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-[2fr_5fr]">
       {/* 左列 */}
       <div class="landing-section flex flex-col gap-8 delay-100">
@@ -45,7 +50,7 @@ const socials = [
         <Card title="Socials">
           <ul class="m-0 flex list-none flex-col gap-1 p-0">
             {
-              socials.map((social) => (
+              socials.map((social, index) => (
                 <li>
                   <a
                     href={social.href}
@@ -57,7 +62,24 @@ const socials = [
                         : null
                     }
                   >
-                    <social.icon class="stroke-foreground h-5 w-5 stroke-1" />
+                    {/* 黑/红交替的斜切色块图标底，与 Tag 贴纸同语言 */}
+                    <span
+                      class:list={[
+                        "flex h-7 w-7 shrink-0 -skew-x-6 items-center justify-center border",
+                        index % 2 === 0
+                          ? "border-accent bg-foreground"
+                          : "border-foreground bg-accent",
+                      ]}
+                    >
+                      <social.icon
+                        class:list={[
+                          "h-4 w-4 skew-x-6 stroke-1",
+                          index % 2 === 0
+                            ? "stroke-background"
+                            : "stroke-white",
+                        ]}
+                      />
+                    </span>
                     <span>{social.label}</span>
                   </a>
                 </li>
@@ -65,16 +87,20 @@ const socials = [
             }
             <li>
               <a href="mailto:sagecheni@outlook.com" class="social-row">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  class="stroke-foreground h-5 w-5"
+                <span
+                  class="border-accent bg-foreground flex h-7 w-7 shrink-0 -skew-x-6 items-center justify-center border"
                 >
-                  <rect x="3" y="5" width="18" height="14" rx="1"></rect>
-                  <path d="m3 7 9 6 9-6"></path>
-                </svg>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    class="stroke-background h-4 w-4 skew-x-6"
+                  >
+                    <rect x="3" y="5" width="18" height="14" rx="1"></rect>
+                    <path d="m3 7 9 6 9-6"></path>
+                  </svg>
+                </span>
                 <span>Email</span>
               </a>
             </li>
@@ -85,9 +111,19 @@ const socials = [
       {/* 右列 */}
       <div class="flex flex-col gap-8">
         <div class="landing-section delay-200">
-          <Card title="About Me">
+          <Card title="About Me" class="overflow-hidden">
+            {/* 星形水印 —— 打破大块留白 */}
+            <svg
+              viewBox="0 0 64 64"
+              class="text-accent pointer-events-none absolute -right-6 -bottom-8 h-36 w-36 rotate-12 opacity-[0.07]"
+              aria-hidden="true"
+            >
+              <path
+                d="M32 4 L39 24 L60 24 L43 37 L49 58 L32 45 L15 58 L21 37 L4 24 L25 24 Z"
+                fill="currentColor"></path>
+            </svg>
             <div
-              class="text-foreground-secondary space-y-3 text-sm leading-relaxed"
+              class="text-foreground-secondary relative space-y-3 text-sm leading-relaxed"
             >
               <p>
                 在北邮读人工智能，白天调模型，晚上给 NAS 加点没人需要的小功能。
@@ -109,16 +145,42 @@ const socials = [
         </div>
 
         <div class="landing-section delay-400">
-          <LatestPosts limit={6} />
+          {/* 收进卡片，与左列形成一致的面板节奏 —— 裸行浮在纯黑上太素 */}
+          <Card class="overflow-hidden">
+            <span class="halftone br" aria-hidden="true"></span>
+            <LatestPosts limit={6} />
 
-          <a
-            href="/blog"
-            class="border-foreground hover:bg-accent hover:border-accent mt-6 inline-block -skew-x-12 border-2 px-5 py-1.5 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
-          >
-            <span class="block skew-x-12">全部文章 →</span>
-          </a>
+            <div class="mt-5 text-right">
+              <a
+                href="/blog"
+                class="border-foreground hover:bg-accent hover:border-accent inline-block -skew-x-12 border-2 px-5 py-1.5 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
+              >
+                <span class="block skew-x-12">全部文章 →</span>
+              </a>
+            </div>
+          </Card>
         </div>
       </div>
     </div>
   </div>
 </BaseLayout>
+
+<style>
+  /* 红斜带：从左上扫向右下，7% 透明度 —— 有构图但不抢卡片 */
+  .home-band {
+    position: absolute;
+    top: 12%;
+    left: -8%;
+    right: -8%;
+    height: 52%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--accent) 7%, transparent) 18%,
+      color-mix(in srgb, var(--accent) 7%, transparent) 82%,
+      transparent 100%
+    );
+    transform: skewY(-6deg);
+    pointer-events: none;
+  }
+</style>

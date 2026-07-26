@@ -10,7 +10,13 @@ const bio = [
 ];
 ---
 
-<Card class="flex flex-col items-center gap-3 text-center">
+{
+  /* group：让头像红底的 group-hover:rotate-0 真正生效（此前没有 group 父级，纯死代码） */
+}
+<Card
+  class="group flex flex-col items-center gap-3 overflow-hidden text-center"
+>
+  <span class="halftone tl" aria-hidden="true"></span>
   <div class="relative">
     {/* 斜切红底衬在头像后面 */}
     <div
