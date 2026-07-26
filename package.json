@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && pagefind --site dist && node scripts/check-links.mjs",
+    "build": "node scripts/build-maps.mjs && astro build && pagefind --site dist && node scripts/check-links.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "test:e2e": "playwright test"

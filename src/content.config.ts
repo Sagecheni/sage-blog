@@ -2,7 +2,12 @@ import { glob } from "astro/loaders";
 import { defineCollection, z } from "astro:content";
 
 const blogs = defineCollection({
-  loader: glob({ pattern: "**/[^_]*.md", base: "./src/blog" }),
+  // dev 放开下划线草稿便于预览；生产照旧排除。
+  // 注意：草稿的 frontmatter 也必须完整（schema 校验不放松），仅正文可残缺
+  loader: glob({
+    pattern: import.meta.env.DEV ? "**/*.md" : "**/[^_]*.md",
+    base: "./src/blog",
+  }),
   schema: z.object({
     slug: z.string(),
     title: z.string(),
@@ -19,6 +24,15 @@ const blogs = defineCollection({
 
     // 「太长不看」摘要，渲染在文章标题下方
     tldr: z.string().optional(),
+
+    // 游记位置：声明后自动生成足迹（红点/省份点亮/文章位置徽章）
+    location: z
+      .object({
+        place: z.string(),
+        lat: z.number(),
+        lng: z.number(),
+      })
+      .optional(),
 
     readTime: z.number().optional(),
 

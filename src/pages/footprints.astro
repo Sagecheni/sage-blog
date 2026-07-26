@@ -24,9 +24,60 @@ const inChina = (fp: { lat: number; lng: number }) =>
 const blogs = await getPublishedBlogs();
 const titleOf = new Map(blogs.map((b) => [b.data.slug, b.data.title]));
 
+// ── 自动足迹：带 location frontmatter 的游记自动生成足迹并与手动条目合并。
+//    同地多篇归并 posts（按日期升序）；与手动条目同名时手动字段优先、posts 合并 ──
+const fmtMonth = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+const autoByPlace = new Map<
+  string,
+  { lat: number; lng: number; first: Date; posts: string[]; trip?: string }
+>();
+for (const b of [...blogs].sort(
+  (a, z) => a.data.date.getTime() - z.data.date.getTime(),
+)) {
+  const loc = b.data.location;
+  if (!loc) continue;
+  const entry = autoByPlace.get(loc.place);
+  if (entry) {
+    entry.posts.push(b.data.slug);
+    entry.trip ??= b.data.series;
+  } else {
+    autoByPlace.set(loc.place, {
+      lat: loc.lat,
+      lng: loc.lng,
+      first: b.data.date,
+      posts: [b.data.slug],
+      trip: b.data.series,
+    });
+  }
+}
+
+const merged = footprints.map((fp) => {
+  const auto = autoByPlace.get(fp.place);
+  if (!auto) return fp;
+  autoByPlace.delete(fp.place);
+  return {
+    ...fp,
+    posts: [...new Set([...(fp.posts ?? []), ...auto.posts])],
+    trip: fp.trip ?? auto.trip,
+  };
+});
+for (const [place, auto] of autoByPlace) {
+  merged.push({
+    place,
+    lat: auto.lat,
+    lng: auto.lng,
+    date: fmtMonth(auto.first),
+    posts: auto.posts,
+    trip: auto.trip,
+  });
+}
+const allFootprints = merged;
+
 // ── 统计 ──
-const visited = footprints.filter((fp) => !fp.planned);
-const planned = footprints.filter((fp) => fp.planned);
+const visited = allFootprints.filter((fp) => !fp.planned);
+const planned = allFootprints.filter((fp) => fp.planned);
 
 // 最远足迹：以北京为原点的球面距离
 const HOME = { lat: 39.9042, lng: 116.4074 };
@@ -44,8 +95,8 @@ const farthest = visited
   .sort((a, b) => b.km - a.km)[0];
 
 // ── 旅行路线：同 trip 的点按数组顺序连线（每个视图分别算像素坐标）──
-const trips = new Map<string, typeof footprints>();
-for (const fp of footprints) {
+const trips = new Map<string, typeof allFootprints>();
+for (const fp of allFootprints) {
   if (!fp.trip) continue;
   if (!trips.has(fp.trip)) trips.set(fp.trip, []);
   trips.get(fp.trip)!.push(fp);
@@ -73,7 +124,7 @@ const chinaRoutes = [...trips.values()]
   );
 
 // 默认视图：境内有点显中国，否则世界
-const defaultView = footprints.some(inChina) ? "china" : "world";
+const defaultView = allFootprints.some(inChina) ? "china" : "world";
 
 const views = [
   {
@@ -84,7 +135,7 @@ const views = [
     height: 813,
     viewBox: "0 0 1400 813",
     routes: chinaRoutes,
-    dots: footprints.filter(inChina).map((fp) => ({
+    dots: allFootprints.filter(inChina).map((fp) => ({
       fp,
       x: chinaX(fp.lng),
       y: chinaY(fp.lat),
@@ -98,7 +149,7 @@ const views = [
     height: 800,
     viewBox: "0 0 1600 800",
     routes: worldRoutes,
-    dots: footprints.map((fp) => ({
+    dots: allFootprints.map((fp) => ({
       fp,
       x: worldX(fp.lng),
       y: worldY(fp.lat),
@@ -117,7 +168,7 @@ const views = [
     <header class="blog-hero">
       <h1 class="blog-hero-title font-heading">FOOTPRINTS</h1>
       <p class="blog-hero-hand font-hand" aria-hidden="true">
-        {footprints.length} 个地方，慢慢多起来
+        {allFootprints.length} 个地方，慢慢多起来
       </p>
 
       {/* 统计行 */}
@@ -176,10 +227,24 @@ const views = [
             alt={`${view.label}地图`}
             width={view.width}
             height={view.height}
-            class="block h-auto w-full select-none"
+            class="fp-base block h-auto w-full select-none"
             loading={view.id === defaultView ? "eager" : "lazy"}
             decoding="async"
           />
+
+          {/* 省份点亮层 —— 独立于底图，不参与暗色反相（红反相会变青） */}
+          {view.id === "china" && (
+            <img
+              src="/china-lit.webp"
+              alt=""
+              width={view.width}
+              height={view.height}
+              class="pointer-events-none absolute inset-0 h-full w-full"
+              loading={view.id === defaultView ? "eager" : "lazy"}
+              decoding="async"
+              aria-hidden="true"
+            />
+          )}
 
           {/* 旅行路线 */}
           {view.routes.length > 0 && (
@@ -213,8 +278,8 @@ const views = [
                 class:list={["fp-dot", fp.planned && "planned"]}
                 style={style}
                 aria-label={label}
+                data-place={fp.place}
               >
-                {!fp.planned && <span class="fp-pulse" aria-hidden="true" />}
                 <span class="fp-tip">{label}</span>
               </a>
             ) : (
@@ -222,9 +287,9 @@ const views = [
                 class:list={["fp-dot", fp.planned && "planned"]}
                 style={style}
                 aria-label={label}
+                data-place={fp.place}
                 tabindex="0"
               >
-                {!fp.planned && <span class="fp-pulse" aria-hidden="true" />}
                 <span class="fp-tip">{label}</span>
               </span>
             );
@@ -265,7 +330,7 @@ const views = [
       class="landing-section m-0 mt-6 grid list-none grid-cols-1 gap-3 p-0 delay-100 sm:grid-cols-2 lg:grid-cols-3"
     >
       {
-        footprints.map((fp) => (
+        allFootprints.map((fp) => (
           <li>
             <div class="card group relative overflow-hidden p-0">
               <span class="card-notch" aria-hidden="true" />
@@ -334,8 +399,8 @@ const views = [
 </BaseLayout>
 
 <style>
-  /* 暗色主题反相底图：白海变黑海 */
-  :global(html.dark) .footprints-map img {
+  /* 暗色主题反相底图（仅 .fp-base —— 点亮层的红不能被反成青） */
+  :global(html.dark) .footprints-map img.fp-base {
     filter: invert(1) brightness(0.8);
   }
 
@@ -381,24 +446,14 @@ const views = [
     border: 2px solid var(--accent);
   }
 
-  .fp-pulse {
-    position: absolute;
-    inset: -6px;
-    border: 2px solid var(--accent);
-    transform: rotate(45deg);
-    opacity: 0;
-    animation: fp-pulse 2.4s ease-out infinite;
+  /* ?focus= 联动：目标点放大 + 提示框常显 */
+  .fp-dot.is-focus::before {
+    transform: rotate(45deg) scale(1.6);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent);
   }
 
-  @keyframes fp-pulse {
-    0% {
-      opacity: 0.9;
-      transform: scale(0.4);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(1.6);
-    }
+  .fp-dot.is-focus .fp-tip {
+    opacity: 1;
   }
 
   .fp-tip {
@@ -423,12 +478,6 @@ const views = [
   .fp-dot:focus-visible .fp-tip {
     opacity: 1;
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .fp-pulse {
-      animation: none;
-    }
-  }
 </style>
 
 <script>
@@ -439,19 +488,42 @@ const views = [
     if (buttons[0].dataset.bound === "true") return;
     buttons[0].dataset.bound = "true";
 
-    buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const target = btn.dataset.viewBtn;
-        document.querySelectorAll<HTMLElement>(".fp-view").forEach((view) => {
-          view.classList.toggle("hidden", view.dataset.view !== target);
-        });
-        buttons.forEach((other) => {
-          const active = other === btn;
-          other.classList.toggle("is-active", active);
-          other.setAttribute("aria-pressed", String(active));
-        });
+    function showView(target: string) {
+      document.querySelectorAll<HTMLElement>(".fp-view").forEach((view) => {
+        view.classList.toggle("hidden", view.dataset.view !== target);
       });
+      buttons.forEach((btn) => {
+        const active = btn.dataset.viewBtn === target;
+        btn.classList.toggle("is-active", active);
+        btn.setAttribute("aria-pressed", String(active));
+      });
+    }
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => showView(btn.dataset.viewBtn!));
     });
+
+    // ?focus=地名 —— 文章位置徽章跳转过来：高亮目标点、必要时切视图、滚到地图
+    const focus = new URLSearchParams(location.search).get("focus");
+    if (focus) {
+      const dots = [
+        ...document.querySelectorAll<HTMLElement>(".fp-dot"),
+      ].filter((dot) => dot.dataset.place === focus);
+      if (dots.length) {
+        dots.forEach((dot) => dot.classList.add("is-focus"));
+        // 目标只存在于非默认视图（如境外点）时切过去
+        const container = dots[0].closest<HTMLElement>(".fp-view");
+        const visible = dots.some(
+          (dot) => !dot.closest(".fp-view")?.classList.contains("hidden"),
+        );
+        if (!visible && container?.dataset.view) {
+          showView(container.dataset.view);
+        }
+        document
+          .querySelector(".fp-view:not(.hidden)")
+          ?.scrollIntoView({ block: "center" });
+      }
+    }
   }
 
   document.addEventListener("DOMContentLoaded", initFootprints);
