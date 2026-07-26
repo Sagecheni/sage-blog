@@ -89,6 +89,12 @@ const { title = "root@sage:~", class: className } = Astro.props;
     const terminals = document.querySelectorAll("#terminal-content");
 
     terminals.forEach((terminal) => {
+      // ClientRouter 初始加载会双触发（DOMContentLoaded + astro:page-load），
+      // 不守卫的话元素会被二次隐藏并挂上两个 observer
+      const host = terminal as HTMLElement;
+      if (host.dataset.typed === "true") return;
+      host.dataset.typed = "true";
+
       const wrapper = terminal.querySelector(".terminal-slot-content");
       if (!wrapper) return;
 
