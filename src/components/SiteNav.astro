@@ -10,6 +10,11 @@ const links = [
   { href: "/", label: "首页", match: (p: string) => p === "/" },
   { href: "/blog", label: "博客", match: (p: string) => p.startsWith("/blog") },
   {
+    href: "/footprints",
+    label: "足迹",
+    match: (p: string) => p.startsWith("/footprints"),
+  },
+  {
     href: "/friends",
     label: "友链",
     match: (p: string) => p.startsWith("/friends"),

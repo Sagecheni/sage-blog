@@ -843,6 +843,14 @@ html.theme-vt::view-transition-new(root) {
   }
 }
 
+/* WIKI LINK —— [[双链]] 解析失败时的可见反馈（红色波浪线） */
+.wiki-link-missing {
+  text-decoration: underline wavy var(--accent);
+  text-underline-offset: 3px;
+  cursor: help;
+  opacity: 0.85;
+}
+
 /* Citations Bubble (Custom Directive :citen) */
 .citation {
   color: var(--accent);

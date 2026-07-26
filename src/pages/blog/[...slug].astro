@@ -78,6 +78,20 @@ export async function getStaticPaths() {
       }));
   }
 
+  // 反向链接：谁的正文里用 [[本文 slug/标题]] 链接了我
+  const WIKI = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+  function backlinksOf(blog: BlogType) {
+    const targets = new Set([blog.data.slug, blog.data.title]);
+    return blogs_
+      .filter((b) => b.data.slug !== blog.data.slug)
+      .filter((b) =>
+        [...(b.body ?? "").matchAll(WIKI)].some((m) =>
+          targets.has(m[1].trim()),
+        ),
+      )
+      .map((b) => ({ slug: b.data.slug, title: b.data.title }));
+  }
+
   return blogs_.map((blog: BlogType, index: number) => {
     // 「更新于」只有和发布日差 24h 以上才值得展示
     const lastMod = lastModOf(blog);
@@ -95,12 +109,13 @@ export async function getStaticPaths() {
         newer: link(blogs_[index - 1]),
         series: seriesOf(blog),
         related: relatedOf(blog, index),
+        backlinks: backlinksOf(blog),
       },
     };
   });
 }
 
-const { blog, modDate, older, newer, series, related } = Astro.props;
+const { blog, modDate, older, newer, series, related, backlinks } = Astro.props;
 const { Content, headings } = await render(blog);
 ---
 
@@ -113,6 +128,7 @@ const { Content, headings } = await render(blog);
   newer={newer}
   series={series}
   related={related}
+  backlinks={backlinks}
 >
   <Content />
 </BlogLayout>

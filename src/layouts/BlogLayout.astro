@@ -20,6 +20,7 @@ const {
   newer,
   series,
   related,
+  backlinks,
 } = Astro.props;
 
 const formatDate = (date: Date) =>
@@ -79,8 +80,28 @@ const tocHeadings: Heading[] = (headings ?? []).filter(
     <article class="pb-8" data-pagefind-body>
       <Title frontmatter={frontmatter} readTime={readTime} modDate={modDate} />
 
-      {/* 移动端目录：xl 以下侧栏 TOC 不可见，这里补一个原生折叠版。
-          标题文本已在正文以 heading 形式索引过，data-pagefind-ignore 防重复 */}
+      {/* TL;DR —— frontmatter 的 tldr 字段，太长不看版 */}
+      {
+        frontmatter.tldr && (
+          <aside class="card mb-8 p-4 md:p-5">
+            <span class="card-notch" aria-hidden="true" />
+            <div class="mb-2 flex items-center gap-2">
+              <span class="bg-accent block h-4 w-1" aria-hidden="true" />
+              <span class="font-heading text-accent text-lg tracking-widest">
+                TL;DR · 太长不看
+              </span>
+            </div>
+            <p class="text-foreground-secondary m-0 text-sm leading-relaxed">
+              {frontmatter.tldr}
+            </p>
+          </aside>
+        )
+      }
+
+      {
+        /* 移动端目录：xl 以下侧栏 TOC 不可见，这里补一个原生折叠版。
+          标题文本已在正文以 heading 形式索引过，data-pagefind-ignore 防重复 */
+      }
       {
         tocHeadings.length > 0 && (
           <details
@@ -240,6 +261,32 @@ const tocHeadings: Heading[] = (headings ?? []).filter(
               ),
             )}
           </div>
+        </section>
+      )
+    }
+
+    {/* 反向链接 —— 谁的正文里 [[双链]] 到了本文 */}
+    {
+      backlinks && backlinks.length > 0 && (
+        <section
+          aria-label="反向链接"
+          class="border-border mb-16 border-t-2 pt-6 print:hidden"
+        >
+          <p class="text-foreground-secondary mb-3 font-mono text-xs tracking-widest">
+            链接到本文的文章
+          </p>
+          <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
+            {backlinks.map((link: { slug: string; title: string }) => (
+              <li>
+                <a
+                  href={`/blog/${link.slug}`}
+                  class="border-border hover:border-accent hover:text-accent inline-block border-2 px-3 py-1 text-sm transition-colors"
+                >
+                  ← {link.title}
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
       )
     }

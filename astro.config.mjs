@@ -8,6 +8,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { remarkLinkCard } from "./src/plugins/remark-link-card.mjs";
 import { remarkVideoEmbed } from "./src/plugins/remark-video-embed.mjs";
+import { remarkWikiLink } from "./src/plugins/remark-wiki-link.mjs";
 import { rehypeImageFigure } from "./src/plugins/rehype-image-figure.mjs";
 import { rehypeTableWrap } from "./src/plugins/rehype-table-wrap.mjs";
 import { optimizedImageDomains } from "./src/data/image-domains.mjs";
@@ -45,6 +46,7 @@ export default defineConfig({
     // 否则会被通用规则吃成 callout div
     remarkPlugins: [
       remarkMath,
+      remarkWikiLink,
       remarkDirective,
       remarkLinkCard,
       remarkVideoEmbed,

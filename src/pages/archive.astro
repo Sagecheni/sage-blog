@@ -1,0 +1,73 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getPublishedBlogs } from "../data/blog";
+import type { BlogType } from "../content.config";
+
+const blogs = await getPublishedBlogs();
+
+// 按年分组（已是日期降序）
+const byYear = new Map<number, BlogType[]>();
+for (const blog of blogs) {
+  const year = blog.data.date.getFullYear();
+  if (!byYear.has(year)) byYear.set(year, []);
+  byYear.get(year)!.push(blog);
+}
+const years = [...byYear.entries()].sort((a, b) => b[0] - a[0]);
+
+const monthDay = (date: Date) =>
+  `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+---
+
+<BaseLayout
+  title="归档｜贤者工坊"
+  description="全部文章的时间轴"
+  author="SageChen"
+  url="https://blog.sagec.fun/archive"
+>
+  <div class="mx-auto w-full max-w-3xl px-4 py-6">
+    <header class="blog-hero">
+      <h1 class="blog-hero-title font-heading">ARCHIVE</h1>
+      <p class="blog-hero-hand font-hand" aria-hidden="true">
+        共 {blogs.length} 篇，按时间倒序
+      </p>
+    </header>
+
+    <div class="landing-section space-y-12">
+      {
+        years.map(([year, posts]) => (
+          <section>
+            <div class="mb-4 flex items-center gap-3">
+              <span
+                class="bg-accent block h-6 w-1.5 -skew-x-12"
+                aria-hidden="true"
+              />
+              <h2 class="font-heading text-foreground m-0 text-3xl tracking-widest">
+                {year}
+              </h2>
+              <span class="text-foreground-secondary font-mono text-xs">
+                × {posts.length}
+              </span>
+            </div>
+
+            <ul class="m-0 list-none space-y-1 p-0">
+              {posts.map((blog) => (
+                <li>
+                  <a href={`/blog/${blog.data.slug}`} class="latest-post-row">
+                    <span class="bloom" aria-hidden="true" />
+                    <span class="post-title text-base">{blog.data.title}</span>
+                    <time
+                      class="post-date font-mono"
+                      datetime={blog.data.date.toISOString()}
+                    >
+                      {monthDay(blog.data.date)}
+                    </time>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</BaseLayout>

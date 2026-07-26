@@ -1,0 +1,163 @@
+---
+// Konami 秘技彩蛋：↑↑↓↓←→←→BA 触发全屏预告函。
+// P5R 主题博客的义务。纯装饰，零业务耦合。
+---
+
+<style is:global>
+  /* 彩蛋卡片由 JS 动态创建，样式必须全局 */
+  .calling-card-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--background) 88%, transparent);
+    backdrop-filter: blur(4px);
+    animation: cc-fade 200ms ease-out;
+    cursor: pointer;
+  }
+
+  .calling-card {
+    position: relative;
+    max-width: min(420px, 86vw);
+    padding: 2.5rem 2rem 2rem;
+    background: var(--accent);
+    border: 4px dashed #000000;
+    box-shadow: 10px 10px 0 var(--foreground);
+    text-align: center;
+    transform: rotate(-4deg);
+    animation: cc-pop 450ms var(--ease-pop);
+  }
+
+  .calling-card-star {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 0.75rem;
+    animation: cc-spin 6s linear infinite;
+  }
+
+  .calling-card-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.8rem, 6vw, 2.6rem);
+    letter-spacing: 0.1em;
+    color: #ffffff;
+    text-shadow: 3px 3px 0 #000000;
+  }
+
+  .calling-card-sub {
+    margin-top: 0.5rem;
+    font-family: var(--font-hand);
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .calling-card-hint {
+    margin-top: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  @keyframes cc-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes cc-pop {
+    from {
+      transform: rotate(-24deg) scale(0.2);
+    }
+    to {
+      transform: rotate(-4deg) scale(1);
+    }
+  }
+
+  @keyframes cc-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .calling-card,
+    .calling-card-star,
+    .calling-card-overlay {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  const SEQUENCE = [
+    "ArrowUp",
+    "ArrowUp",
+    "ArrowDown",
+    "ArrowDown",
+    "ArrowLeft",
+    "ArrowRight",
+    "ArrowLeft",
+    "ArrowRight",
+    "b",
+    "a",
+  ];
+  let progress = 0;
+
+  function showCard() {
+    if (document.querySelector(".calling-card-overlay")) return;
+
+    const overlay = document.createElement("div");
+    overlay.className = "calling-card-overlay";
+    overlay.innerHTML = `
+      <div class="calling-card">
+        <svg class="calling-card-star" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M32 4 L39 24 L60 24 L43 37 L49 58 L32 45 L15 58 L21 37 L4 24 L25 24 Z"
+            fill="#000000" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+        <div class="calling-card-title">TAKE YOUR HEART</div>
+        <div class="calling-card-sub">你找到了贤者工坊的预告函。</div>
+        <div class="calling-card-hint">CLICK / ESC TO DISMISS</div>
+      </div>`;
+
+    const dismiss = () => overlay.remove();
+    overlay.addEventListener("click", dismiss);
+    document.addEventListener("keydown", function onKey(event) {
+      if (event.key === "Escape") {
+        dismiss();
+        document.removeEventListener("keydown", onKey);
+      }
+    });
+
+    document.body.appendChild(overlay);
+  }
+
+  // 模块级监听一次，跨 ClientRouter 换页存活
+  document.addEventListener("keydown", (event: KeyboardEvent) => {
+    // 输入框里打字不算
+    const target = event.target as HTMLElement | null;
+    if (
+      target &&
+      (target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable)
+    ) {
+      progress = 0;
+      return;
+    }
+
+    const expected = SEQUENCE[progress];
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    if (key === expected) {
+      progress++;
+      if (progress === SEQUENCE.length) {
+        progress = 0;
+        showCard();
+      }
+    } else {
+      // 允许序列首键立即重新开始
+      progress = key === SEQUENCE[0] ? 1 : 0;
+    }
+  });
+</script>

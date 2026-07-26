@@ -94,6 +94,21 @@ const archiveTree: ArchiveYear[] = [...archiveMap.values()]
       <p class="blog-hero-hand font-hand" aria-hidden="true">
         技术笔记 & 胡思乱想
       </p>
+      {/* 归档 / 系列入口 —— 放这里不挤主导航 */}
+      <div class="mt-4 flex items-center justify-center gap-3">
+        <a
+          href="/archive"
+          class="border-border hover:border-accent hover:text-accent -skew-x-12 border-2 px-4 py-1 text-sm font-bold transition-colors"
+        >
+          <span class="block skew-x-12">归档</span>
+        </a>
+        <a
+          href="/series"
+          class="border-border hover:border-accent hover:text-accent -skew-x-12 border-2 px-4 py-1 text-sm font-bold transition-colors"
+        >
+          <span class="block skew-x-12">系列</span>
+        </a>
+      </div>
     </header>
 
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_3fr]">
@@ -164,7 +179,10 @@ const archiveTree: ArchiveYear[] = [...archiveMap.values()]
                       </time>
 
                       <div class="md:col-span-3">
-                        <h3 class="font-heading text-foreground group-hover:text-accent text-xl tracking-wide transition-colors">
+                        <h3
+                          class="font-heading text-foreground group-hover:text-accent text-xl tracking-wide transition-colors"
+                          transition:name={`post-title-${blog.data.slug}`}
+                        >
                           {blog.data.title}
                         </h3>
 

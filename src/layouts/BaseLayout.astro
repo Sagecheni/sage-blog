@@ -14,6 +14,9 @@ export interface Props {
 }
 
 import { ClientRouter } from "astro:transitions";
+// ?url 拿到打包后的哈希路径，供 preload —— 站标/大标题的显示字体，
+// 预加载消除首屏的字体闪换（仅 latin 子集 ~20KB，每页都用得上）
+import bangersWoff2 from "@fontsource/bangers/files/bangers-latin-400-normal.woff2?url";
 import "@fontsource-variable/space-grotesk";
 import "@fontsource/ibm-plex-mono";
 import "@fontsource/bangers";
@@ -25,6 +28,7 @@ import Footer from "../components/Footer.astro";
 import Opening from "../components/Opening.astro";
 import Search from "../components/Search.astro";
 import BackToTop from "../components/BackToTop.astro";
+import EasterEgg from "../components/EasterEgg.astro";
 import "../styles/global.css";
 
 const {
@@ -46,6 +50,25 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/p5-witch-hat.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    {/* 移动浏览器工具栏着色（class 主题无法被 meta 感知，按系统偏好近似） */}
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#000000"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#ffffff"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={bangersWoff2}
+      crossorigin
+    />
     <meta name="generator" content={Astro.generator} />
     <Seo {title} {description} {author} {url} {pubDate} {modDate} {tags} />
     <ClientRouter />
@@ -89,6 +112,7 @@ const {
 
     <Footer />
     <BackToTop />
+    <EasterEgg />
 
     <script>
       // 滚动揭示：给进入视口的 .landing-section 加 .is-visible（分级延迟由 CSS 的 .delay-* 控制）

@@ -17,6 +17,9 @@ const blogs = defineCollection({
     // 列表页置顶（不影响首页「最新文章」的时间序）
     pinned: z.boolean().optional(),
 
+    // 「太长不看」摘要，渲染在文章标题下方
+    tldr: z.string().optional(),
+
     readTime: z.number().optional(),
 
     // ✅ 给 rehype-citation 用
