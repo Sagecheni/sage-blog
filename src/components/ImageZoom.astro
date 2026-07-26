@@ -1,0 +1,63 @@
+---
+// 文章配图点击放大。medium-zoom 早就在 package.json 里了，一直没接上。
+// 注意 rehype-image-figure 会把 <img> 包进 <a href="原图" target="_blank">，
+// 不拦截的话点击会直接跳走、盖掉 zoom —— 但只拦普通左键，
+// ⌘/Ctrl/中键点击仍然按原样在新标签打开原图。
+---
+
+<script>
+  function initImageZoom() {
+    const images = document.querySelectorAll<HTMLImageElement>(
+      ".markdown figure img",
+    );
+    if (!images.length) return;
+
+    const host = document.querySelector<HTMLElement>(".markdown");
+    if (!host || host.dataset.zoomBound === "true") return;
+    host.dataset.zoomBound = "true";
+
+    images.forEach((img) => {
+      img.style.cursor = "zoom-in";
+
+      const link = img.closest("a");
+      link?.addEventListener("click", (event: MouseEvent) => {
+        // 保留「新标签打开原图」的能力
+        if (
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.button !== 0
+        )
+          return;
+        event.preventDefault();
+      });
+    });
+
+    import("medium-zoom").then(({ default: mediumZoom }) => {
+      const styles = getComputedStyle(document.documentElement);
+      const background =
+        styles.getPropertyValue("--background").trim() || "#000";
+
+      mediumZoom(images, {
+        margin: 24,
+        background: `color-mix(in srgb, ${background} 92%, transparent)`,
+        scrollOffset: 0,
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initImageZoom);
+  document.addEventListener("astro:page-load", initImageZoom);
+</script>
+
+<style is:global>
+  /* 放大层之上再压一层 P5R 红边，跟站内卡片语言一致 */
+  .medium-zoom-overlay {
+    z-index: 60;
+  }
+  .medium-zoom-image--opened {
+    z-index: 61;
+    border: 2px solid var(--accent) !important;
+    box-shadow: 6px 6px 0 var(--foreground);
+  }
+</style>

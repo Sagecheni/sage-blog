@@ -1,5 +1,4 @@
-
-import { visit } from 'unist-util-visit';
+import { visit } from "unist-util-visit";
 
 /**
  * Rehype plugin to wrap Markdown images in a <figure> element.
@@ -15,63 +14,66 @@ export function rehypeImageFigure() {
   return (tree) => {
     let count = 1;
 
-    visit(tree, 'element', (node, index, parent) => {
+    visit(tree, "element", (node, index, parent) => {
       // Look for <img> tags
-      if (node.tagName !== 'img') {
+      if (node.tagName !== "img") {
         return;
       }
 
       // Skip images that are already wrapped in <figure> or <a>
       // This prevents double-wrapping if the user manually wrote HTML
-      if (parent.tagName === 'figure' || parent.tagName === 'a') {
+      if (parent.tagName === "figure" || parent.tagName === "a") {
         return;
       }
 
       const { src, alt, title } = node.properties || {};
       const currentCount = count++;
-      
+
       // Construct the new node structure
       const figureNode = {
-        type: 'element',
-        tagName: 'figure',
-        properties: { className: ['group'] },
+        type: "element",
+        tagName: "figure",
+        properties: { className: ["group"] },
         children: [
           {
-            type: 'element',
-            tagName: 'a',
+            type: "element",
+            tagName: "a",
             properties: {
               href: src,
-              target: '_blank',
-              rel: 'noopener'
+              target: "_blank",
+              rel: "noopener",
             },
             children: [
               {
                 ...node,
                 properties: {
                   ...node.properties,
-                  loading: 'lazy'
-                }
+                  loading: "lazy",
+                },
               },
               {
-                type: 'element',
-                tagName: 'figcaption',
+                type: "element",
+                tagName: "figcaption",
                 properties: {},
                 children: [
-                  { type: 'text', value: `图 ${currentCount}：${alt || title || ''}` }
-                ]
-              }
-            ]
-          }
-        ]
+                  {
+                    type: "text",
+                    value: `图 ${currentCount}：${alt || title || ""}`,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       // Check if the image is the sole child of a <p> tag
-      const isParentParagraph = parent.tagName === 'p';
+      const isParentParagraph = parent.tagName === "p";
       const isSoleChild =
         parent.children.length === 1 ||
         parent.children.every(
           (child) =>
-            child === node || (child.type === 'text' && !child.value.trim())
+            child === node || (child.type === "text" && !child.value.trim()),
         );
 
       if (isParentParagraph && isSoleChild) {

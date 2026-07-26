@@ -10,9 +10,12 @@ const toc = (headings ?? []).filter(
 {
   toc.length > 0 && (
     <nav aria-label="Table of contents" class="toc">
-      <p class="toc-title">文章目录</p>
+      <p class="toc-title font-heading">
+        <span class="toc-title-block" aria-hidden="true" />
+        目录
+      </p>
       <ol class="toc-list">
-        {toc.map((h: { depth: any; slug: unknown; text: unknown }) => (
+        {toc.map((h: { depth: number; slug: string; text: string }) => (
           <li class={`toc-item depth-${h.depth}`}>
             <a class="toc-link" href={`#${h.slug}`} data-toc-link={h.slug}>
               {h.text}
@@ -20,44 +23,136 @@ const toc = (headings ?? []).filter(
           </li>
         ))}
       </ol>
+      <button id="toc-back-top" class="toc-top font-heading" type="button">
+        ↑ TOP
+      </button>
     </nav>
   )
 }
 
 <script>
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        const id = entry.target.getAttribute("id");
-        if (entry.intersectionRatio > 0) {
-          const links = document.querySelectorAll(`.toc-link`);
-          links.forEach((link) => link.classList.remove("is-active"));
+  // 红条位置改为实测：量激活项的真实 offsetTop / offsetHeight，
+  // 写进 CSS 变量驱动 ::after。原实现用 :has(nth-child(N)) 按固定 2rem 硬编码，
+  // 中文标题一换行就全体漂移，且只写到第 10 项。
+  function initToc() {
+    const nav = document.querySelector<HTMLElement>(".toc");
+    if (!nav || nav.dataset.bound === "true") return;
+    nav.dataset.bound = "true";
 
-          const activeLink = document.querySelector(`.toc-link[href="#${id}"]`);
-          if (activeLink) {
-            activeLink.classList.add("is-active");
-          }
-        }
-      });
-    },
-    { rootMargin: "0px 0px -80% 0px" }, // Highlight when heading is near top
-  );
+    const list = nav.querySelector<HTMLElement>(".toc-list");
+    const links = [...nav.querySelectorAll<HTMLAnchorElement>(".toc-link")];
+    if (!list || !links.length) return;
 
-  // Track all headings that are in the TOC
-  document.querySelectorAll("h2, h3").forEach((h) => {
-    observer.observe(h);
-  });
+    const headings = links
+      .map((link) => document.getElementById(link.dataset.tocLink ?? ""))
+      .filter((el): el is HTMLElement => el !== null);
+    // id 对不上宁可不高亮，也不高亮错
+    if (headings.length !== links.length) return;
+
+    const header = document.querySelector<HTMLElement>(".header-nav");
+    // 触发线：固定导航底缘再往下一小段
+    const triggerLine = () => (header?.offsetHeight ?? 68) + 36;
+
+    let activeIndex = -1;
+
+    function measureBar(index: number) {
+      const link = links[index];
+      list!.style.setProperty("--toc-bar-y", `${link.offsetTop}px`);
+      list!.style.setProperty("--toc-bar-h", `${link.offsetHeight}px`);
+      list!.style.setProperty("--toc-bar-o", "1");
+    }
+
+    // 目录自身可滚动（长文章），让激活项始终留在可视范围内
+    function keepInView(link: HTMLAnchorElement) {
+      const top = list!.offsetTop + link.offsetTop;
+      const bottom = top + link.offsetHeight;
+      if (top < nav!.scrollTop + 8) {
+        nav!.scrollTop = top - 8;
+      } else if (bottom > nav!.scrollTop + nav!.clientHeight - 8) {
+        nav!.scrollTop = bottom - nav!.clientHeight + 8;
+      }
+    }
+
+    function setActive(index: number) {
+      const changed = index !== activeIndex;
+      activeIndex = index;
+      links.forEach((link, i) =>
+        link.classList.toggle("is-active", i === index),
+      );
+      // 未变化时也重测 —— 字体加载/窗口缩放会改变行高
+      measureBar(index);
+      if (changed) keepInView(links[index]);
+    }
+
+    function currentIndex() {
+      const line = triggerLine();
+      let index = 0;
+      for (let i = 0; i < headings.length; i++) {
+        if (headings[i].getBoundingClientRect().top <= line) index = i;
+        else break;
+      }
+      return index;
+    }
+
+    let raf = 0;
+    function schedule() {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setActive(currentIndex()));
+    }
+
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule, { passive: true });
+
+    // 点击立即反馈，不等平滑滚动结算
+    links.forEach((link, index) =>
+      link.addEventListener("click", () => setActive(index)),
+    );
+
+    document
+      .getElementById("toc-back-top")
+      ?.addEventListener("click", () => window.scrollTo({ top: 0 }));
+
+    setActive(currentIndex());
+  }
+
+  document.addEventListener("DOMContentLoaded", initToc);
+  document.addEventListener("astro:page-load", initToc);
 </script>
 
 <style>
   .toc {
     position: relative;
-    padding-left: 0.75rem; /* Space for accent bar */
+    padding-left: 0.75rem;
+    /* 给 .toc-link 的 translateX(4px) 留位，避免右移时被裁 */
+    padding-right: 0.3rem;
+    /* 长文章的目录自己滚，不撑破侧栏。
+       overflow-x 必须显式 hidden —— 只设 overflow-y 时另一轴会隐式变 auto，
+       激活项右移 4px 的溢出就会在底部生成一条横向滚动条，
+       配上红色 scrollbar-color 看起来像一根永远满格的进度条 */
+    max-height: calc(100svh - var(--nav-height) - 6rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) transparent;
   }
+
   .toc-title {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    font-size: 1.05rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
   }
+
+  .toc-title-block {
+    width: 0.85rem;
+    height: 0.85rem;
+    background-color: var(--accent);
+    transform: skewX(-12deg);
+  }
+
   .toc-list {
     list-style: none;
     padding: 0;
@@ -65,23 +160,34 @@ const toc = (headings ?? []).filter(
     position: relative;
   }
 
-  /* Accent bar that slides to active item */
+  /* 轨道：整列淡色细线 */
   .toc-list::before {
     content: "";
     position: absolute;
     left: -0.75rem;
     top: 0;
+    bottom: 0;
     width: 3px;
-    height: 2rem; /* Approximate height of one item */
-    background-color: var(--accent);
-    transition: transform var(--motion-duration-normal)
-      var(--motion-ease-emphasized);
-    transform-origin: top;
+    background-color: var(--border);
   }
 
-  .toc-item {
-    position: relative;
+  /* 红条：位置与高度由脚本实测写入 */
+  .toc-list::after {
+    content: "";
+    position: absolute;
+    left: -0.75rem;
+    top: 0;
+    width: 3px;
+    height: var(--toc-bar-h, 1.5rem);
+    background-color: var(--accent);
+    opacity: var(--toc-bar-o, 0);
+    transform: translateY(var(--toc-bar-y, 0px));
+    transition:
+      transform 250ms var(--motion-ease-emphasized),
+      height 250ms var(--motion-ease-emphasized),
+      opacity 200ms;
   }
+
   .toc-item.depth-3 {
     padding-left: 1rem;
   }
@@ -89,54 +195,41 @@ const toc = (headings ?? []).filter(
   .toc-link {
     display: block;
     padding: 0.25rem 0;
+    font-size: 0.9rem;
     text-decoration: none;
+    color: var(--foreground);
+    opacity: 0.65;
     transition-property: transform, opacity, color;
     transition-duration: var(--motion-duration-fast);
     transition-timing-function: var(--motion-ease-standard);
-    color: var(--foreground);
-    opacity: 0.7;
   }
+
   .toc-link:hover {
     opacity: 1;
     color: var(--accent);
     transform: translateX(4px);
   }
+
   .toc-link.is-active {
     font-weight: 600;
     opacity: 1;
     color: var(--accent);
-    transform: translateX(4px) scale(1.05);
+    transform: translateX(4px);
   }
 
-  /* Calculate bar position based on active item index */
-  .toc-list:has(.toc-item:nth-child(1) .toc-link.is-active)::before {
-    transform: translateY(0);
+  .toc-top {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    width: 100%;
+    border-top: 1px solid var(--border);
+    text-align: left;
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    color: var(--foreground-secondary);
+    transition: color 150ms var(--motion-ease-standard);
   }
-  .toc-list:has(.toc-item:nth-child(2) .toc-link.is-active)::before {
-    transform: translateY(2rem);
-  }
-  .toc-list:has(.toc-item:nth-child(3) .toc-link.is-active)::before {
-    transform: translateY(4rem);
-  }
-  .toc-list:has(.toc-item:nth-child(4) .toc-link.is-active)::before {
-    transform: translateY(6rem);
-  }
-  .toc-list:has(.toc-item:nth-child(5) .toc-link.is-active)::before {
-    transform: translateY(8rem);
-  }
-  .toc-list:has(.toc-item:nth-child(6) .toc-link.is-active)::before {
-    transform: translateY(10rem);
-  }
-  .toc-list:has(.toc-item:nth-child(7) .toc-link.is-active)::before {
-    transform: translateY(12rem);
-  }
-  .toc-list:has(.toc-item:nth-child(8) .toc-link.is-active)::before {
-    transform: translateY(14rem);
-  }
-  .toc-list:has(.toc-item:nth-child(9) .toc-link.is-active)::before {
-    transform: translateY(16rem);
-  }
-  .toc-list:has(.toc-item:nth-child(10) .toc-link.is-active)::before {
-    transform: translateY(18rem);
+
+  .toc-top:hover {
+    color: var(--accent);
   }
 </style>

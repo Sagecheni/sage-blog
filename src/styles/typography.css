@@ -1,37 +1,12 @@
 @import "tailwindcss";
 
-/* MARGINS */
-@layer base {
-  .header-margin {
-    @apply px-3 py-2;
-  }
-  .body-margin {
-    @apply mx-auto max-w-[1600px];
-  }
-  .main-margin {
-    @apply px-6 py-3;
-  }
-  .center {
-    @apply mx-auto max-w-5xl pb-13;
-  }
-  .footer-margin {
-    @apply px-3 pt-16 pb-2;
-  }
-}
-
 /* CUSTOM CLASSES */
 @layer base {
-  /* navbar */
-  .navigation {
-    @apply hover:text-accent text-base tracking-wider select-none;
-  }
-
   /* button */
   .button {
     @apply text-accent ring-accent hover:bg-accent hover:text-background rounded-lg px-3 py-1 tracking-wide ring-1 select-none hover:font-semibold active:ring-0;
   }
 
-  /* heading */
   /* heading */
   .heading {
     @apply py-6 text-5xl select-none;
@@ -43,7 +18,7 @@
     @apply pb-6 text-center text-3xl tracking-widest select-none;
   }
   .blog-title {
-    @apply py-3 pt-6 text-5xl select-none;
+    @apply text-4xl leading-tight tracking-wide select-none md:text-5xl;
   }
 
   /* common */
@@ -60,7 +35,7 @@
     @apply relative my-6;
   }
   .image {
-    @apply ring-accent h-auto w-full object-cover ring-1 select-none group-hover:brightness-75;
+    @apply border-border h-auto w-full border-2 object-cover select-none group-hover:brightness-75;
   }
   .figcaption {
     @apply absolute inset-0 flex items-center justify-center bg-black/40 p-3 text-center text-white/86 opacity-0 group-hover:opacity-100 sm:text-xl md:text-2xl lg:text-3xl;
@@ -73,53 +48,98 @@
 
   /* divider */
   hr {
-    @apply border-foreground/26 m-13;
+    @apply border-border;
   }
 }
 
 /* MARKDOWN STYLES */
 @layer base {
   .markdown {
-    /* headings */
+    /* 锚点跳转（目录/脚注/参考文献）落点让开固定导航栏，
+       否则目标标题会藏在顶栏底下 */
+    [id] {
+      scroll-margin-top: calc(var(--nav-height) + 1.5rem);
+    }
+
+    /* headings —— 间距走 margin 而非 padding，
+       这样 ::before 的斜切红条能贴合文字高度而不是被撑到整块 */
     h2 {
-      @apply pt-13 pb-3 text-4xl;
+      @apply relative mt-14 mb-4 pl-5 text-4xl;
       a {
         @apply text-foreground no-underline hover:no-underline;
       }
     }
+    h2::before {
+      content: "";
+      position: absolute;
+      top: 0.12em;
+      bottom: 0.12em;
+      left: 0;
+      width: 0.4rem;
+      background-color: var(--accent);
+      transform: skewX(-12deg);
+    }
+
     h3 {
-      @apply pt-8 pb-2 text-3xl;
+      @apply relative mt-10 mb-3 pl-4 text-3xl;
       a {
         @apply text-foreground no-underline hover:no-underline;
       }
     }
+    h3::before {
+      content: "";
+      position: absolute;
+      top: 0.3em;
+      left: 0;
+      width: 0.55rem;
+      height: 0.55rem;
+      background-color: var(--accent);
+      transform: rotate(45deg);
+    }
+
     h4 {
-      @apply pt-6 pb-2 text-2xl;
+      @apply mt-8 mb-2 text-2xl;
       a {
         @apply text-foreground no-underline hover:no-underline;
       }
     }
 
     h5 {
-      @apply pt-3 pb-1 text-xl;
+      @apply mt-6 mb-1 text-xl;
       a {
         @apply text-foreground no-underline hover:no-underline;
       }
     }
 
-    /* paragraph */
+    /* paragraph —— Tailwind preflight 把 margin 清零了，这里必须补回来，
+       否则相邻段落会贴在一起，只靠行高分隔 */
     p {
-      @apply text-lg leading-relaxed opacity-90;
+      @apply my-5 text-lg leading-relaxed opacity-90;
     }
 
-    /* url */
+    /* url —— 下划线从左侧展开，不再用虚线 */
     a {
-      @apply text-accent active:text-foreground decoration-dashed underline-offset-3 transition-all duration-150 ease-in-out hover:underline hover:underline-offset-6;
+      @apply text-accent active:text-foreground relative no-underline transition-colors duration-150;
+      background-image: linear-gradient(var(--accent), var(--accent));
+      background-position: 0 100%;
+      background-repeat: no-repeat;
+      background-size: 0% 2px;
+      transition:
+        background-size 220ms var(--motion-ease-emphasized),
+        color 150ms ease-in-out;
+    }
+    a:hover {
+      background-size: 100% 2px;
     }
 
-    /* quote */
+    /* quote —— P5R：斜切红条 + 硬阴影 */
     blockquote {
-      @apply bg-foreground/13 ring-accent text-foreground my-3 px-6 py-3 opacity-80 ring-1;
+      @apply bg-surface border-border text-foreground my-6 border-2 px-6 py-4;
+      border-left: 6px solid var(--accent);
+      box-shadow: 4px 4px 0 var(--border);
+    }
+    blockquote p {
+      @apply my-2;
     }
 
     /* bold */
@@ -134,29 +154,37 @@
 
     /* keyboard */
     kbd {
-      @apply rounded-lg px-2 py-0.5 font-sans text-base ring-1;
+      @apply border-border bg-surface rounded px-2 py-0.5 font-sans text-base;
     }
 
     /*  code */
     .astro-code {
-      @apply ring-accent my-6 p-6 ring-1;
+      @apply border-border my-6 border-2 p-6;
     }
     .astro-code code {
       @apply bg-inherit p-0 font-medium;
     }
     code {
-      @apply bg-foreground/13 dark:bg-foreground/18 text-foreground rounded-lg px-2 py-0.5 font-mono text-base leading-relaxed opacity-90;
+      @apply bg-surface border-border text-foreground rounded border px-2 py-0.5 font-mono text-base leading-relaxed;
     }
 
     /* lists */
     ol {
-      @apply list-decimal space-y-1 px-8 py-1;
+      @apply my-5 list-decimal space-y-2 px-8;
     }
     ul {
-      @apply list-disc space-y-1 px-8 py-1;
+      @apply my-5 list-disc space-y-2 px-8;
     }
     li {
       @apply px-1 text-lg leading-relaxed opacity-90;
+    }
+    li::marker {
+      color: var(--accent);
+    }
+    /* 嵌套列表不再叠加外边距 */
+    li > ul,
+    li > ol {
+      @apply my-2;
     }
 
     /* dictionary */
@@ -170,7 +198,16 @@
       @apply visible;
     }
 
-    /* table */
+    /* table —— rehype-table-wrap 会包一层 .table-wrap 横向滚动容器，
+       宽表格在窄屏上自己滚，不撑破文章版面 */
+    .table-wrap {
+      @apply my-8 overflow-x-auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent) transparent;
+    }
+    .table-wrap table {
+      @apply my-0;
+    }
     table {
       @apply mx-auto my-8 w-full opacity-90;
     }
@@ -178,31 +215,58 @@
       @apply visible;
     }
     th {
-      @apply bg-foreground/8 ring-foreground/18 px-3 py-1 text-center text-lg ring-1;
+      @apply bg-surface ring-border px-3 py-1 text-center text-lg ring-1;
     }
     td {
-      @apply ring-foreground/18 px-3 py-1 ring-1;
+      @apply ring-border px-3 py-1 ring-1;
     }
 
     /* image block */
     figure {
       @apply relative my-8 select-none;
     }
+    /* pointer-events-none：说明文字是覆盖在图片上的，不拦住点击才能触发 medium-zoom */
     figcaption {
-      @apply absolute inset-0 flex items-center justify-center bg-black/40 p-3 text-center text-lg text-white/86 opacity-0 transition-all duration-150 ease-in-out group-hover:opacity-100 sm:text-xl md:text-2xl lg:text-3xl;
+      @apply pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 p-3 text-center text-lg text-white/86 opacity-0 transition-all duration-150 ease-in-out group-hover:opacity-100 sm:text-xl md:text-2xl lg:text-3xl;
     }
 
     /* media */
     img {
-      @apply ring-accent ring-1 transition-all duration-150 ease-in-out group-hover:brightness-75;
+      @apply border-border border-2 transition-all duration-150 ease-in-out group-hover:brightness-75;
     }
     iframe {
-      @apply ring-accent my-8 ring-1 select-none;
+      @apply border-border my-8 border-2 select-none;
+    }
+
+    /* footnotes —— GFM 输出 <section class="footnotes">，
+       视觉上退为辅助信息：顶部分隔、缩小一号、回跳箭头染红 */
+    .footnotes {
+      @apply border-border mt-14 border-t-2 pt-5;
+    }
+    .footnotes::before {
+      content: "脚注";
+      display: block;
+      margin-bottom: 0.5rem;
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+    }
+    .footnotes p,
+    .footnotes li {
+      @apply my-1 text-base opacity-80;
+    }
+    .footnotes ol {
+      @apply my-2;
+    }
+    .footnotes [data-footnote-backref] {
+      @apply text-accent no-underline;
+      background-image: none;
     }
 
     /* line breaker */
     hr {
-      @apply border-foreground/26 mx-13 mt-13 mb-3;
+      @apply border-border mx-13 mt-13 mb-3;
     }
     /* math */
     .katex-display {

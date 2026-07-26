@@ -7,6 +7,7 @@ import sitemap from "@astrojs/sitemap";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { rehypeImageFigure } from "./src/plugins/rehype-image-figure.mjs";
+import { rehypeTableWrap } from "./src/plugins/rehype-table-wrap.mjs";
 import remarkDirective from "remark-directive";
 import { remarkDirectiveHandle } from "./src/plugins/remark-directive-rehype.js";
 import { rehypeCitationFrontmatter } from "./src/plugins/rehype-citation-frontmatter.mjs";
@@ -30,12 +31,16 @@ export default defineConfig({
     rehypePlugins: [
       rehypeKatex,
       rehypeImageFigure,
-      [rehypeCitationFrontmatter, {
-        csl: "public/ieee.csl",
-        lang: "en-US",
-        linkCitations: true,
-        bibliography: "public/bibliography.bib",
-      }],
+      rehypeTableWrap,
+      [
+        rehypeCitationFrontmatter,
+        {
+          csl: "public/ieee.csl",
+          lang: "en-US",
+          linkCitations: true,
+          bibliography: "public/bibliography.bib",
+        },
+      ],
     ],
     shikiConfig: {
       defaultColor: false,

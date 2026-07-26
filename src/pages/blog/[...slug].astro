@@ -5,19 +5,30 @@ import type { BlogType } from "../../content.config";
 
 export async function getStaticPaths() {
   const blogs: BlogType[] = await getCollection("blogs");
-  const blogs_ = blogs.map((blog) => {
-    const words = (blog.body ?? "").split(/\s+/).filter(Boolean).length;
-    const minutes = Math.ceil(words / 200);
+  const blogs_ = blogs
+    .map((blog) => {
+      const words = (blog.body ?? "").split(/\s+/).filter(Boolean).length;
+      const minutes = Math.ceil(words / 200);
 
-    return { ...blog, data: { ...blog.data, readTime: minutes } };
-  });
-  return blogs_.map((blog: BlogType) => ({
+      return { ...blog, data: { ...blog.data, readTime: minutes } };
+    })
+    .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+  // 文末的上/下一篇：按发布时间排；上一篇 = 更早的一篇，下一篇 = 更新的一篇
+  const link = (blog?: BlogType) =>
+    blog ? { slug: blog.data.slug, title: blog.data.title } : null;
+
+  return blogs_.map((blog: BlogType, index: number) => ({
     params: { slug: blog.data.slug },
-    props: { blog },
+    props: {
+      blog,
+      older: link(blogs_[index + 1]),
+      newer: link(blogs_[index - 1]),
+    },
   }));
 }
 
-const { blog } = Astro.props;
+const { blog, older, newer } = Astro.props;
 const { Content, headings } = await render(blog);
 ---
 
@@ -25,6 +36,8 @@ const { Content, headings } = await render(blog);
   frontmatter={blog.data}
   headings={headings}
   readTime={blog.data.readTime}
+  older={older}
+  newer={newer}
 >
   <Content />
 </BlogLayout>
