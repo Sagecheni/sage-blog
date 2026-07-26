@@ -1,12 +1,20 @@
 ---
-
+// 构建期取年份，避免每年手改一次
+const year = new Date().getFullYear();
 ---
 
-<footer class="footer-margin sticky bottom-0 z-0">
+<footer class="mx-auto w-full max-w-[1280px] px-4 pt-16 pb-8">
+  {/* P5R 斜切分隔线 */}
+  <div class="mb-6 flex items-center gap-3" aria-hidden="true">
+    <span class="bg-accent h-0.5 flex-1 -skew-x-12"></span>
+    <span class="bg-accent block h-2 w-2 rotate-45"></span>
+    <span class="bg-accent h-0.5 flex-1 -skew-x-12"></span>
+  </div>
+
   <div
-    class="text-foreground/50 flex items-center justify-between text-sm select-none"
+    class="text-foreground-secondary flex flex-col items-center justify-between gap-3 text-sm select-none sm:flex-row"
   >
-    <p>© 2025 MIT License</p>
+    <p>© {year} MIT License</p>
     <p class="flex flex-wrap items-center gap-1.5">
       <span>powered by</span>
       <a

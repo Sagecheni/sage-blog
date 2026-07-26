@@ -1,0 +1,119 @@
+---
+import IconTag from "../assets/icons/tag.svg";
+import IconCalendar from "../assets/icons/calendar-week.svg";
+import IconX from "../assets/icons/x.svg";
+
+export interface ArchiveMonth {
+  ym: string;
+  name: string;
+  count: number;
+}
+
+export interface ArchiveYear {
+  year: string;
+  count: number;
+  months: ArchiveMonth[];
+}
+
+export interface Props {
+  tags: [string, number][];
+  archive: ArchiveYear[];
+  total: number;
+  /** 桌面侧栏与移动 overlay 渲染同一套标记，靠 variant 区分 id */
+  variant: "desktop" | "mobile";
+}
+
+const { tags, archive, total, variant } = Astro.props;
+const suffix = variant === "mobile" ? "-mobile" : "";
+---
+
+{/* Tags */}
+<div class="mb-8">
+  <div class="mb-3 flex items-center justify-between">
+    <h3 class="panel-title m-0">
+      <IconTag class="stroke-accent h-5 w-5 stroke-1" /> Tags
+    </h3>
+    <button
+      id={`clear-tags-filter${suffix}`}
+      class="clear-filter-btn invisible opacity-0"
+      title="清除标签筛选"
+      aria-label="清除标签筛选"
+    >
+      <IconX class="h-4 w-4 stroke-current" />
+    </button>
+  </div>
+
+  <ul class="tags-list">
+    <li>
+      <button class="blog-tag active" data-tag="all">
+        <span class="tag-name">All</span>
+        <span class="tag-count">{total}</span>
+      </button>
+    </li>
+    {
+      tags.map(([tag, count]) => (
+        <li>
+          <button class="blog-tag" data-tag={tag}>
+            <span class="tag-name">{tag}</span>
+            <span class="tag-count">{count}</span>
+          </button>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+{/* Archive */}
+<div>
+  <div class="mb-3 flex items-center justify-between">
+    <h3 class="panel-title m-0">
+      <IconCalendar class="stroke-accent h-5 w-5 stroke-1" /> Archive
+    </h3>
+    <button
+      id={`clear-date-filter${suffix}`}
+      class="clear-filter-btn invisible opacity-0"
+      title="清除时间筛选"
+      aria-label="清除时间筛选"
+    >
+      <IconX class="h-4 w-4 stroke-current" />
+    </button>
+  </div>
+
+  <nav class="date-filter-nav">
+    <ul class="date-list">
+      <li>
+        <button class="year-button date-filter active" data-date="all">
+          <span class="year-label">All Posts</span>
+          <span class="year-count">{total}</span>
+        </button>
+      </li>
+      {
+        archive.map((year, index) => (
+          <li class="year-group" data-year={year.year}>
+            <button
+              class="year-button date-filter"
+              data-date={year.year}
+              data-expanded={index === 0 ? "true" : "false"}
+            >
+              <span class="year-indicator" aria-hidden="true">
+                ›
+              </span>
+              <span class="year-label font-mono">{year.year}</span>
+              <span class="year-count">{year.count}</span>
+            </button>
+            <ul class="month-list" style={index === 0 ? "" : "display: none;"}>
+              {year.months.map((month) => (
+                <li>
+                  <button class="month-button date-filter" data-date={month.ym}>
+                    <span class="month-name">{month.name}</span>
+                    <span class="month-count">{month.count}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</div>

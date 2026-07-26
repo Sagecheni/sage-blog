@@ -1,75 +1,77 @@
 ---
-const { frontmatter, readTime } = Astro.props;
 import IconCalendarWeek from "../assets/icons/calendar-week.svg";
 import IconClockHour3 from "../assets/icons/clock-hour-3.svg";
 import IconTag from "../assets/icons/tag.svg";
-import CopyButton from "../components/CopyButton";
+import CopyButton from "./CopyButton";
+import Tag from "./Tag.astro";
+
+const { frontmatter, readTime } = Astro.props;
 ---
 
-<h1 class="blog-title">
-  {frontmatter.title}
-</h1>
-<div
-  class="flex flex-col items-start justify-between gap-3 select-none sm:flex-row"
->
-  <div class="mt-2 space-y-1">
-    <div class="flex gap-8">
-      <!-- Date -->
-      <div
-        class="group flex items-center gap-2 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:-translate-y-0.5"
-      >
+<header class="mb-10">
+  {/* 斜切红条 —— P5R 的标题起手式 */}
+  <div class="mb-4 flex items-center gap-3" aria-hidden="true">
+    <span class="bg-accent block h-1.5 w-16 -skew-x-12"></span>
+    <span class="bg-foreground block h-1.5 w-4 -skew-x-12"></span>
+  </div>
+
+  <h1 class="blog-title font-heading text-foreground">
+    {frontmatter.title}
+  </h1>
+
+  {
+    frontmatter.description && (
+      <p class="text-foreground-secondary mt-3 text-base">
+        {frontmatter.description}
+      </p>
+    )
+  }
+
+  <div
+    class="border-border mt-5 flex flex-col items-start justify-between gap-3 border-t-2 pt-4 select-none sm:flex-row sm:items-center"
+  >
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+      {/* 日期 */}
+      <div class="group flex items-center gap-2">
         <IconCalendarWeek
-          class="stroke-foreground group-hover:stroke-accent size-5 stroke-1 transition-colors duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)]"
+          class="stroke-foreground-secondary group-hover:stroke-accent size-4 stroke-1 transition-colors"
         />
-        <p
-          class="font-mono text-base opacity-90 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] group-hover:font-semibold group-hover:opacity-100"
-        >
+        <p class="text-foreground-secondary font-mono text-sm">
           {
-            frontmatter.date
-              .toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })
-              .slice(0, 11)
+            frontmatter.date.toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
           }
         </p>
       </div>
 
-      <!-- Read time -->
-      <div
-        class="group flex items-center gap-2 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:-translate-y-0.5"
-      >
+      {/* 阅读时长 */}
+      <div class="group flex items-center gap-2">
         <IconClockHour3
-          class="stroke-foreground group-hover:stroke-accent size-5 translate-y-0.25 stroke-1 transition-colors duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)]"
+          class="stroke-foreground-secondary group-hover:stroke-accent size-4 stroke-1 transition-colors"
         />
-        <p
-          class="font-mono text-base opacity-90 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] group-hover:font-semibold group-hover:opacity-100"
-        >
+        <p class="text-foreground-secondary font-mono text-sm">
           {readTime} min read
         </p>
       </div>
+
+      {/* 标签 */}
+      {
+        frontmatter.tags?.length > 0 && (
+          <div class="flex items-center gap-2">
+            <IconTag class="stroke-foreground-secondary size-4 stroke-1" />
+            <div class="flex flex-wrap gap-2">
+              {frontmatter.tags.map((tag: string) => (
+                <Tag name={tag} />
+              ))}
+            </div>
+          </div>
+        )
+      }
     </div>
 
-    <!-- Tags -->
-    <div
-      class="group flex items-center gap-2 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:-translate-y-0.5"
-    >
-      <IconTag
-        class="fill-background stroke-foreground group-hover:fill-accent group-hover:stroke-background size-5 stroke-1 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)]"
-      />
-      <div class="space-x-2">
-        {
-          frontmatter.tags.map((tag: string) => (
-            <span class="text-base opacity-90 transition-all duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] group-hover:font-semibold group-hover:opacity-100">
-              {tag}
-            </span>
-          ))
-        }
-      </div>
-    </div>
-  </div>
-  <div class="flex items-center justify-center gap-3">
     <CopyButton client:idle />
   </div>
-</div>
+</header>

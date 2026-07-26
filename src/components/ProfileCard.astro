@@ -1,0 +1,45 @@
+---
+import { Image } from "astro:assets";
+import Card from "./Card.astro";
+import sageAvatar from "../assets/images/sagec.jpeg";
+
+const bio = [
+  "BUPT / 人工智能 / MCPRL",
+  "对 LLM、多模态、AI-infra 感兴趣",
+  "顺手给 NAS 折腾点小服务",
+];
+---
+
+<Card class="flex flex-col items-center gap-3 text-center">
+  <div class="relative">
+    {/* 斜切红底衬在头像后面 */}
+    <div
+      class="bg-accent absolute -inset-1.5 -rotate-6 transition-transform duration-300 group-hover:rotate-0"
+      aria-hidden="true"
+    >
+    </div>
+    <Image
+      src={sageAvatar}
+      alt="SageChen"
+      width={96}
+      height={96}
+      class="border-foreground relative h-24 w-24 border-2 object-cover"
+      loading="lazy"
+    />
+  </div>
+
+  <h2 class="font-heading text-foreground m-0 text-xl tracking-wider">
+    SageChen
+  </h2>
+
+  <ul class="m-0 w-full list-none space-y-2 p-0 text-sm">
+    {
+      bio.map((line) => (
+        <li class="flex items-center gap-2 text-left">
+          <span class="bg-accent block h-2 w-2 shrink-0 rotate-45" />
+          <span class="text-foreground-secondary">{line}</span>
+        </li>
+      ))
+    }
+  </ul>
+</Card>

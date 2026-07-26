@@ -1,68 +1,17 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Card from "../../components/Card.astro";
+import BlogFilters from "../../components/BlogFilters.astro";
+import Tag from "../../components/Tag.astro";
+import type { ArchiveYear } from "../../components/BlogFilters.astro";
 import type { BlogType } from "../../content.config";
+import IconFilter from "../../assets/icons/tag.svg";
+import IconX from "../../assets/icons/x.svg";
 
-
-const blogs: BlogType[] = await getCollection("blogs");
-const allBlogs = blogs
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
-
-// --- Data Preparation ---
-
-// 1. Tag Counts
-const tagCounts = new Map<string, number>();
-allBlogs.forEach((blog) => {
-  blog.data.tags.forEach((tag) => {
-    tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-  });
-});
-const sortedTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]); // Sort by count desc
-
-// 2. Archive Tree (Year -> Month)
-type ArchiveMonth = { ym: string; name: string; count: number; date: Date };
-type ArchiveYear = { year: string; count: number; months: ArchiveMonth[] };
-
-const archiveMap = new Map<string, ArchiveYear>();
-
-allBlogs.forEach((blog) => {
-  const y = blog.data.date.getFullYear().toString();
-  const ym = monthKey(blog.data.date);
-  
-  if (!archiveMap.has(y)) {
-    archiveMap.set(y, { year: y, count: 0, months: [] });
-  }
-  const yearEntry = archiveMap.get(y)!;
-  yearEntry.count++;
-
-  // Find or create month entry
-  let monthEntry = yearEntry.months.find((m) => m.ym === ym);
-  if (!monthEntry) {
-    const date = new Date(blog.data.date);
-    const name = date.toLocaleString("default", { month: "long" });
-    monthEntry = { ym, name, count: 0, date };
-    yearEntry.months.push(monthEntry);
-  }
-  monthEntry.count++;
-});
-
-// Sort years desc, months desc within year
-const archiveTree = [...archiveMap.values()]
-  .sort((a, b) => parseInt(b.year) - parseInt(a.year))
-  .map((y) => {
-    y.months.sort((a, b) => b.date.getTime() - a.date.getTime());
-    return y;
-  });
-
-function getMonthName(ym: string) {
-  const [y, m] = ym.split("-");
-  const date = new Date(parseInt(y), parseInt(m) - 1);
-  return date.toLocaleString("default", { month: "long", year: "numeric" });
-}
-
-function monthKey(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
+function monthKey(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
   return `${y}-${m}`;
 }
 
@@ -80,320 +29,364 @@ function removeMarkdown(markdown: string) {
     .trim();
 }
 
+const blogs: BlogType[] = await getCollection("blogs");
+const allBlogs = blogs.sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+
+// 1. 标签计数
+const tagCounts = new Map<string, number>();
+allBlogs.forEach((blog) => {
+  blog.data.tags.forEach((tag) => {
+    tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+  });
+});
+const sortedTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]);
+
+// 2. 归档树（年 → 月）
+const archiveMap = new Map<
+  string,
+  ArchiveYear & { months: (ArchiveYear["months"][number] & { date: Date })[] }
+>();
+
+allBlogs.forEach((blog) => {
+  const y = blog.data.date.getFullYear().toString();
+  const ym = monthKey(blog.data.date);
+
+  if (!archiveMap.has(y)) {
+    archiveMap.set(y, { year: y, count: 0, months: [] });
+  }
+  const yearEntry = archiveMap.get(y)!;
+  yearEntry.count++;
+
+  let monthEntry = yearEntry.months.find((m) => m.ym === ym);
+  if (!monthEntry) {
+    const date = new Date(blog.data.date);
+    monthEntry = {
+      ym,
+      name: date.toLocaleString("default", { month: "long" }),
+      count: 0,
+      date,
+    };
+    yearEntry.months.push(monthEntry);
+  }
+  monthEntry.count++;
+});
+
+const archiveTree: ArchiveYear[] = [...archiveMap.values()]
+  .sort((a, b) => parseInt(b.year) - parseInt(a.year))
+  .map((y) => {
+    y.months.sort((a, b) => b.date.getTime() - a.date.getTime());
+    return y;
+  });
 ---
 
 <BaseLayout
-  title="Blog"
-  description="All blog posts"
-  author="Rahul"
+  title="Blog｜贤者工坊"
+  description="SageChen 的全部文章"
+  author="SageChen"
   url="https://blog.sagec.fun/blog"
 >
-  <div class="mx-auto w-full max-w-[1600px] px-4 md:px-8 py-8">
-    <div class="grid grid-cols-1 gap-12 lg:grid-cols-4">
-      {/* Left Sidebar: Filters */}
-      <aside class="order-2 lg:order-1 lg:col-span-1">
-        <div class="sticky top-24 space-y-8">
-          
-          {/* Tags Section */}
-          <div>
-            <h3 class="mb-4 text-xl font-bold uppercase tracking-wider text-accent">
-              Tags
-            </h3>
-            <div class="flex flex-wrap gap-x-4 gap-y-2">
-              <button
-                class="tag-filter text-left transition-colors flex items-center gap-1 group"
-                data-tag="all"
-              >
-                <span class="group-hover:underline underline-offset-4 decoration-accent/50">All Tags</span>
-                <span class="text-xs text-muted-foreground/60 group-hover:text-accent">({allBlogs.length})</span>
-              </button>
-              {
-                sortedTags.map(([tag, count]) => (
-                  <button
-                    class="tag-filter text-left transition-colors flex items-center gap-1 group"
-                    data-tag={tag}
-                  >
-                   <span class="capitalize group-hover:underline underline-offset-4 decoration-accent/50">{tag}</span>
-                   <span class="text-xs text-muted-foreground/60 group-hover:text-accent">({count})</span>
-                  </button>
-                ))
-              }
-            </div>
-          </div>
+  <div class="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-8">
+    <header class="blog-hero">
+      <h1 class="blog-hero-title font-heading">BLOG</h1>
+      <p class="blog-hero-hand font-hand" aria-hidden="true">
+        技术笔记 & 胡思乱想
+      </p>
+    </header>
 
-          {/* Archive Section */}
-          <div>
-            <h3 class="mb-4 text-xl font-bold uppercase tracking-wider text-accent">
-              Archive
-            </h3>
-            <div class="flex flex-col gap-1">
-              <button
-                class="date-filter text-left hover:text-accent active transition-colors font-semibold"
-                data-date="all"
-              >
-                All Posts
-              </button>
-              
-              <div class="space-y-4 mt-2">
-                {archiveTree.map((year) => (
-                  <div class="archive-year-group" data-year={year.year}>
-                    <div class="flex items-center justify-between w-full group">
-                        <button
-                          class="year-toggle p-1 hover:text-accent text-muted-foreground transition-colors"
-                          aria-label="Toggle year"
-                        >
-                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down transition-transform duration-200" style="transform: rotate(-90deg)"><path d="m6 9 6 6 6-6"/></svg>
-                        </button>
-                        <button 
-                          class="date-filter text-left hover:text-accent font-bold flex-1 flex justify-between ml-1 bg-transparent"
-                          data-date={year.year}
-                        >
-                          <span>{year.year}</span>
-                          <span class="text-muted-foreground group-hover:text-accent">({year.count})</span>
-                        </button>
-                    </div>
-                    <div class="months-list hidden pl-8 mt-1 border-l-2 border-border/30 space-y-1 transition-all">
-                      {year.months.map((month) => (
-                        <button
-                          class="date-filter text-left hover:text-accent text-sm w-full flex justify-between group py-0.5"
-                          data-date={month.ym}
-                        >
-                          <span>{month.name}</span>
-                          <span class="text-muted-foreground group-hover:text-accent text-xs">({month.count})</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_3fr]">
+      {/* 桌面侧栏 */}
+      <aside class="hidden lg:block">
+        <div class="sticky top-[calc(var(--nav-height)+1rem)]">
+          <Card>
+            <BlogFilters
+              tags={sortedTags}
+              archive={archiveTree}
+              total={allBlogs.length}
+              variant="desktop"
+            />
+          </Card>
         </div>
       </aside>
 
-      {/* Center: Blog Posts */}
-      <main class="order-1 lg:order-2 lg:col-span-3">
-        <div class="flex items-center justify-between mb-8 border-b border-border pb-4">
-            <h2 class="text-2xl font-bold uppercase tracking-wider">
-            Articles
-            </h2>
-            <div id="filter-status" class="hidden text-sm text-muted-foreground">
-                Showing <span id="showing-count" class="font-bold text-foreground">0</span> posts
-            </div>
+      {/* 文章列表 */}
+      <section>
+        <div
+          class="border-border mb-6 flex items-center justify-between border-b-2 pb-3"
+        >
+          <h2 class="font-heading text-2xl tracking-widest">ARTICLES</h2>
+          <p class="text-foreground-secondary text-sm">
+            共 <span id="showing-count" class="text-accent font-bold"
+              >{allBlogs.length}</span
+            > 篇
+          </p>
         </div>
 
-        <div id="posts-container" class="space-y-8 min-h-[50vh]">
+        <div id="posts-container" class="min-h-[50vh] space-y-4">
           {
             allBlogs.map((blog) => {
-              const ym = monthKey(blog.data.date);
               const cleanBody = removeMarkdown(blog.body ?? "");
-              const snippet = cleanBody.slice(0, 150) + (cleanBody.length > 150 ? "..." : "");
-              
+              const snippet =
+                cleanBody.slice(0, 150) + (cleanBody.length > 150 ? "…" : "");
+
               return (
-                <div
-                  class="blog-post-item border-b border-border/50 py-8 first:pt-0"
+                <article
+                  class="blog-post-item"
                   data-tags={JSON.stringify(blog.data.tags)}
-                  data-date={ym}
+                  data-date={monthKey(blog.data.date)}
                 >
-                  <a href={`/blog/${blog.data.slug}`} class="group grid grid-cols-1 gap-2 md:grid-cols-4 md:gap-8">
-                    {/* Date Column */}
-                    <div class="md:col-span-1">
-                      <time datetime={blog.data.date.toISOString()} class="text-sm font-mono text-muted-foreground">
-                         {blog.data.date.toLocaleDateString("en-GB", {
+                  <a
+                    href={`/blog/${blog.data.slug}`}
+                    class="card group block p-4 md:p-6"
+                  >
+                    <span class="card-notch" aria-hidden="true" />
+
+                    <div class="grid grid-cols-1 gap-2 md:grid-cols-4 md:gap-6">
+                      <time
+                        datetime={blog.data.date.toISOString()}
+                        class="text-foreground-secondary font-mono text-sm md:col-span-1"
+                      >
+                        {blog.data.date.toLocaleDateString("en-GB", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
                         })}
                       </time>
-                    </div>
 
-                    {/* Content Column */}
-                    <div class="md:col-span-3">
-                      <h3 class="text-xl font-bold font-heading text-foreground group-hover:text-accent transition-colors">
-                        {blog.data.title}
-                      </h3>
-                      
-                       <p class="mt-2 text-muted-foreground line-clamp-2">
-                         {snippet || blog.data.description}
-                       </p>
-                      
-                       <div class="mt-4 flex flex-wrap gap-3 items-center">
-                        {blog.data.tags.map((tag, i) => {
-                          const rotation = ["rotate-1", "-rotate-2", "rotate-3", "-rotate-1"][tag.length % 4];
-                          const bg = i % 2 === 0 ? "bg-black" : "bg-red-600";
-                          const text = "text-white";
-                          return (
-                            <span class={`text-xs font-bold uppercase tracking-wide px-2 py-0.5 transform ${rotation} ${bg} ${text} shadow-sm border border-white/20`}>
-                              {tag}
-                            </span>
-                          );
-                        })}
+                      <div class="md:col-span-3">
+                        <h3 class="font-heading text-foreground group-hover:text-accent text-xl tracking-wide transition-colors">
+                          {blog.data.title}
+                        </h3>
+
+                        <p class="text-foreground-secondary mt-2 line-clamp-2 text-sm">
+                          {snippet || blog.data.description}
+                        </p>
+
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                          {blog.data.tags.map((tag) => (
+                            <Tag name={tag} />
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </a>
-                </div>
+                </article>
               );
             })
           }
-           <div id="no-posts" class="hidden text-center py-20 text-muted-foreground bg-secondary/10 rounded-lg">
-             <p class="text-lg">No posts found matching current filters.</p>
-             <button id="clear-filters" class="mt-4 text-accent hover:underline">Clear all filters</button>
+
+          <div id="no-posts" class="hidden py-20 text-center">
+            <p class="text-foreground-secondary text-lg">
+              没有符合当前筛选条件的文章。
+            </p>
+            <button
+              id="clear-filters"
+              class="border-foreground hover:bg-accent hover:border-accent mt-4 -skew-x-12 border-2 px-4 py-1 text-sm font-bold transition-all hover:text-white"
+            >
+              <span class="block skew-x-12">清除全部筛选</span>
+            </button>
           </div>
         </div>
-      </main>
+      </section>
+    </div>
+  </div>
 
+  {/* 移动端筛选入口 */}
+  <button
+    id="mobile-filter-btn"
+    class="border-foreground bg-accent fixed bottom-4 left-4 z-40 flex items-center gap-1.5 border-2 px-3.5 py-2 text-white shadow-[3px_3px_0_var(--foreground)] lg:hidden"
+    aria-label="筛选"
+  >
+    <IconFilter class="h-4 w-4 stroke-current stroke-1" />
+    <span class="text-xs font-bold">筛选</span>
+  </button>
+
+  <div
+    id="mobile-filter-overlay"
+    class="bg-background/95 pointer-events-none fixed inset-0 z-[60] opacity-0 backdrop-blur-sm transition-opacity duration-300 lg:hidden"
+  >
+    <div class="h-full overflow-y-auto p-4 pb-20">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="font-heading text-accent m-0 text-xl tracking-widest">
+          FILTERS
+        </h2>
+        <button
+          id="mobile-filter-close"
+          class="border-border hover:border-accent border-2 p-2 transition-colors"
+          aria-label="关闭筛选"
+        >
+          <IconX class="stroke-foreground h-5 w-5" />
+        </button>
+      </div>
+
+      <BlogFilters
+        tags={sortedTags}
+        archive={archiveTree}
+        total={allBlogs.length}
+        variant="mobile"
+      />
     </div>
   </div>
 </BaseLayout>
 
 <script>
+  // 单一事实来源：两套面板（桌面侧栏 + 移动 overlay）里的按钮共享同一份状态，
+  // 每次变更后由 syncUI() 统一刷新两边的 .active，避免激活态分叉。
   let currentTag = "all";
   let currentDate = "all";
 
-  const tagButtons = document.querySelectorAll(".tag-filter");
-  const dateButtons = document.querySelectorAll(".date-filter");
-  const toggleButtons = document.querySelectorAll(".year-toggle");
-  const posts = document.querySelectorAll(".blog-post-item");
-  const noPostsMsg = document.getElementById("no-posts");
-  const showingCountEl = document.getElementById("showing-count");
-  const filterStatusEl = document.getElementById("filter-status");
-  const clearFiltersBtn = document.getElementById("clear-filters");
+  function initBlogFilters() {
+    const container = document.getElementById("posts-container");
+    if (!container) return;
+    if (container.dataset.bound === "true") return;
+    container.dataset.bound = "true";
 
-  function filterPosts() {
-    let visibleCount = 0;
-    posts.forEach((post) => {
-      const el = post as HTMLElement;
-      const postTags = JSON.parse(el.dataset.tags || "[]");
-      const postDate = el.dataset.date || ""; // YYYY-MM
+    const posts = document.querySelectorAll<HTMLElement>(".blog-post-item");
+    const noPosts = document.getElementById("no-posts");
+    const showingCount = document.getElementById("showing-count");
 
-      const tagMatch = currentTag === "all" || postTags.includes(currentTag);
-      
-      // Date Logic:
-      let dateMatch = false;
-      if (currentDate === "all") {
-          dateMatch = true;
-      } else if (currentDate.length === 4) { // Year only
-          dateMatch = postDate.startsWith(currentDate);
-      } else { // YYYY-MM
-          dateMatch = postDate === currentDate;
-      }
-
-      if (tagMatch && dateMatch) {
-        el.style.display = "block";
-        visibleCount++;
-      } else {
-        el.style.display = "none";
-      }
-    });
-
-    if (noPostsMsg) {
-        noPostsMsg.style.display = visibleCount === 0 ? "block" : "none";
+    function matchesDate(postDate: string) {
+      if (currentDate === "all") return true;
+      // 四位是年份，否则是 YYYY-MM
+      if (currentDate.length === 4) return postDate.startsWith(currentDate);
+      return postDate === currentDate;
     }
-    
-    if (showingCountEl) showingCountEl.textContent = visibleCount.toString();
-    if (filterStatusEl) filterStatusEl.classList.remove("hidden");
-  }
 
-  function setActive(buttons: NodeListOf<Element>, activeBtn: HTMLElement) {
-      buttons.forEach(b => {
-          b.classList.remove("text-accent", "font-bold");
-          b.classList.add("text-muted-foreground");
+    function applyFilters() {
+      let visible = 0;
+
+      posts.forEach((post) => {
+        const tags: string[] = JSON.parse(post.dataset.tags || "[]");
+        const tagOk = currentTag === "all" || tags.includes(currentTag);
+        const dateOk = matchesDate(post.dataset.date || "");
+
+        const show = tagOk && dateOk;
+        post.style.display = show ? "" : "none";
+        if (show) visible++;
       });
-      activeBtn.classList.add("text-accent", "font-bold");
-      activeBtn.classList.remove("text-muted-foreground");
-  }
 
-  // Toggling Logic
-  toggleButtons.forEach(btn => {
-      btn.addEventListener("click", (e) => {
-          e.stopPropagation(); // Prevent filter click
-          const group = btn.closest(".archive-year-group");
-          const list = group?.querySelector(".months-list");
-          const icon = btn.querySelector("svg");
-          
-          if(list && icon) {
-              list.classList.toggle("hidden");
-              // Rotate icon
-              if (list.classList.contains("hidden")) {
-                  icon.style.transform = "rotate(-90deg)"; // Point right
-              } else {
-                  icon.style.transform = "rotate(0deg)"; // Point down
-              }
-          }
+      if (noPosts) noPosts.classList.toggle("hidden", visible !== 0);
+      if (showingCount) showingCount.textContent = String(visible);
+
+      syncUI();
+    }
+
+    function syncUI() {
+      // 标签：两套面板一起刷
+      document
+        .querySelectorAll<HTMLElement>(".blog-tag")
+        .forEach((btn) =>
+          btn.classList.toggle("active", btn.dataset.tag === currentTag),
+        );
+
+      // 时间：年 / 月按钮同理
+      document
+        .querySelectorAll<HTMLElement>(".date-filter")
+        .forEach((btn) =>
+          btn.classList.toggle("active", btn.dataset.date === currentDate),
+        );
+
+      // 清除按钮仅在该维度有筛选时可见
+      toggleClearBtn("clear-tags-filter", currentTag !== "all");
+      toggleClearBtn("clear-tags-filter-mobile", currentTag !== "all");
+      toggleClearBtn("clear-date-filter", currentDate !== "all");
+      toggleClearBtn("clear-date-filter-mobile", currentDate !== "all");
+    }
+
+    function toggleClearBtn(id: string, visible: boolean) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.classList.toggle("invisible", !visible);
+      btn.classList.toggle("opacity-0", !visible);
+    }
+
+    // 手风琴：只展开目标年份，其余收起（两套面板同步）
+    function expandYear(year: string) {
+      document.querySelectorAll<HTMLElement>(".year-group").forEach((group) => {
+        const toggle = group.querySelector<HTMLElement>(".year-button");
+        const list = group.querySelector<HTMLElement>(".month-list");
+        if (!toggle || !list) return;
+        const open = group.dataset.year === year;
+        toggle.dataset.expanded = String(open);
+        list.style.display = open ? "" : "none";
       });
-  });
+    }
 
-  tagButtons.forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const target = e.currentTarget as HTMLElement; // Use currentTarget for button with children
+    // 标签点击（事件委托，覆盖两套面板）
+    document.addEventListener("click", (event) => {
+      const target = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+        ".blog-tag",
+      );
+      if (!target) return;
       currentTag = target.dataset.tag || "all";
-      
-      // Visual update
-      tagButtons.forEach(b => {
-        b.classList.remove("font-bold", "text-accent");
-        b.classList.add("text-muted-foreground"); 
-      });
-      target.classList.add("font-bold", "text-accent");
-      target.classList.remove("text-muted-foreground");
-
-      filterPosts();
+      applyFilters();
     });
-  });
 
-  dateButtons.forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const target = e.currentTarget as HTMLElement;
+    // 时间点击：年按钮同时负责展开/收起
+    document.addEventListener("click", (event) => {
+      const target = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+        ".date-filter",
+      );
+      if (!target) return;
+
       currentDate = target.dataset.date || "all";
-      const year = currentDate.split("-")[0]; // YYYY or YYYY-MM -> YYYY
 
-      // Expand the year group if it's a specific date
-      if (currentDate !== "all") {
-          const group = document.querySelector(`.archive-year-group[data-year="${year}"]`);
-          const list = group?.querySelector(".months-list");
-          const icon = group?.querySelector(".year-toggle svg");
-          if (list && list.classList.contains("hidden")) {
-               list.classList.remove("hidden");
-               if(icon) (icon as HTMLElement).style.transform = "rotate(0deg)";
-          }
-      }
+      // 年份和月份都把所属年份展开（"All Posts" 不动折叠状态）
+      if (currentDate !== "all") expandYear(currentDate.split("-")[0]);
 
-      dateButtons.forEach(b => {
-        b.classList.remove("font-bold", "text-accent");
-      });
-      target.classList.add("font-bold", "text-accent");
-
-      filterPosts();
+      applyFilters();
     });
-  });
-  
-  clearFiltersBtn?.addEventListener("click", () => {
-       (document.querySelector('[data-tag="all"]') as HTMLElement)?.click();
-       (document.querySelector('[data-date="all"]') as HTMLElement)?.click();
-  });
 
-  // Init
-  const allTagBtn = document.querySelector('[data-tag="all"]');
-  if(allTagBtn) {
-      allTagBtn.classList.remove("text-muted-foreground");
-      allTagBtn.classList.add("font-bold", "text-accent");
-  } else {
-      // Ensure others have default class if not set in HTML?
-      // Actually standard tags in loop will render with base classes.
-      // I should ensure they start with text-muted-foreground if not active.
-      // I'll add text-muted-foreground to the HTML generation in a fix-up if needed, 
-      // OR just rely on the fact that I'm adding it here on init?
-      // Better to add it in init loop.
+    document.getElementById("clear-filters")?.addEventListener("click", () => {
+      currentTag = "all";
+      currentDate = "all";
+      applyFilters();
+    });
+
+    document
+      .getElementById("clear-tags-filter")
+      ?.addEventListener("click", () => {
+        currentTag = "all";
+        applyFilters();
+      });
+    document
+      .getElementById("clear-tags-filter-mobile")
+      ?.addEventListener("click", () => {
+        currentTag = "all";
+        applyFilters();
+      });
+    document
+      .getElementById("clear-date-filter")
+      ?.addEventListener("click", () => {
+        currentDate = "all";
+        applyFilters();
+      });
+    document
+      .getElementById("clear-date-filter-mobile")
+      ?.addEventListener("click", () => {
+        currentDate = "all";
+        applyFilters();
+      });
+
+    // 移动端 overlay
+    const overlay = document.getElementById("mobile-filter-overlay");
+    const openBtn = document.getElementById("mobile-filter-btn");
+    const closeBtn = document.getElementById("mobile-filter-close");
+
+    function setOverlay(open: boolean) {
+      if (!overlay) return;
+      overlay.classList.toggle("opacity-0", !open);
+      overlay.classList.toggle("pointer-events-none", !open);
+      document.documentElement.style.overflow = open ? "hidden" : "";
+    }
+
+    openBtn?.addEventListener("click", () => setOverlay(true));
+    closeBtn?.addEventListener("click", () => setOverlay(false));
+
+    applyFilters();
   }
-  
-  // Set initial state for all tag buttons that are NOT active
-  tagButtons.forEach(btn => {
-      if(btn !== allTagBtn) btn.classList.add("text-muted-foreground");
-  });
 
-  const allDateBtn = document.querySelector('[data-date="all"]');
-  if(allDateBtn) allDateBtn.classList.add("font-bold", "text-accent");
-  
-  filterPosts();
-
+  document.addEventListener("DOMContentLoaded", initBlogFilters);
+  document.addEventListener("astro:page-load", initBlogFilters);
 </script>

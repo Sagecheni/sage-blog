@@ -7,11 +7,11 @@ import IconSun from "../assets/icons/sun-high.svg?react";
 export default function ThemeToggle() {
   const [theme, setTheme] = useState("");
 
-  // initialization from localStorage
+  // initialization from localStorage —— 默认必须与 BaseLayout 的预绘制脚本一致（dark），
+  // 否则挂载瞬间会把预绘制的结果改掉，闪一下
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
-    const initialTheme = savedTheme || (prefersDark ? "dark" : "light");
+    const initialTheme = savedTheme === "light" ? "light" : "dark";
     setTheme(initialTheme);
     document.documentElement.classList.toggle(
       "light",
@@ -21,7 +21,9 @@ export default function ThemeToggle() {
   }, []);
 
   // keep localStorage + document class in sync
+  // theme 初始为 ""，此时跳过 —— 否则首帧会写入空值并把两个 class 都摘掉
   useEffect(() => {
+    if (!theme) return;
     localStorage.setItem("theme", theme);
     document.documentElement.classList.toggle("light", theme === "light");
     document.documentElement.classList.toggle("dark", theme === "dark");

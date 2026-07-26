@@ -1,0 +1,26 @@
+---
+export interface Props {
+  name: string;
+}
+
+const { name } = Astro.props;
+
+// 按标签名哈希出倾斜角与配色 —— 用名字而不是数组下标，
+// 同一个标签在列表页和文章页才会长得一样
+const hash = [...name].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+const rotations = ["rotate-1", "-rotate-2", "rotate-2", "-rotate-1"];
+const rotation = rotations[hash % rotations.length];
+const inverted = hash % 2 === 0;
+---
+
+<span
+  class:list={[
+    "inline-block -skew-x-12 border-2 px-2 py-0.5 text-xs font-bold tracking-wide transition-transform duration-200 hover:scale-110 hover:rotate-0",
+    rotation,
+    inverted
+      ? "bg-foreground text-background border-accent"
+      : "bg-accent border-foreground text-white",
+  ]}
+>
+  <span class="block skew-x-12">{name}</span>
+</span>

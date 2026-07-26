@@ -1,0 +1,246 @@
+---
+import { Image } from "astro:assets";
+import HeroParticles from "./HeroParticles.astro";
+import heroBg from "../assets/images/character6.jpeg";
+
+const title = "SAGE FORGE";
+const chars = [...title];
+
+// 逐字入场：延迟递进 + 轻微错位角度，避免整齐得像打字机
+const charStyle = (index: number) =>
+  `--char-delay: ${180 + index * 55}ms; --char-rot: ${
+    index % 2 === 0 ? -2 : 2
+  }deg;`;
+---
+
+<section
+  id="hero"
+  class="relative flex h-[100svh] w-full items-center justify-center overflow-hidden"
+>
+  {/* L1 · 人物图 + P5R 红黑渐变罩 */}
+  <div class="absolute inset-0" aria-hidden="true">
+    <Image
+      src={heroBg}
+      alt=""
+      class="h-full w-full object-cover"
+      widths={[640, 1024, 1600, heroBg.width]}
+      sizes={`(max-width: 640px) 640px, (max-width: 1024px) 1024px, (max-width: 1600px) 1600px, ${heroBg.width}px`}
+      quality="mid"
+      loading="eager"
+      fetchpriority="high"
+    />
+    <div
+      class="absolute inset-0"
+      style="background: linear-gradient(180deg, color-mix(in srgb, var(--background) 82%, transparent) 0%, color-mix(in srgb, var(--background) 62%, transparent) 45%, var(--background) 100%);"
+    >
+    </div>
+    {/* 底部斜切碎片，与页面主体衔接 */}
+    <div
+      class="bg-background absolute inset-x-0 bottom-0 h-24"
+      style="clip-path: polygon(0 55%, 100% 0, 100% 100%, 0 100%);"
+    >
+    </div>
+  </div>
+
+  {/* L2/L3 · 粒子 */}
+  <HeroParticles />
+
+  {/* L4 · 视差装饰。data-decor 与 Opening 的 data-key 对应 */}
+  <div id="hero-decor" class="pointer-events-none absolute inset-0">
+    <span
+      data-decor="star"
+      data-speed="0.5"
+      class="absolute top-[20%] left-[7%] will-change-transform"
+    >
+      <svg viewBox="0 0 64 64" class="h-12 w-12 opacity-80 md:h-20 md:w-20">
+        <path
+          d="M32 4 L39 24 L60 24 L43 37 L49 58 L32 45 L15 58 L21 37 L4 24 L25 24 Z"
+          fill="var(--accent)"
+          stroke="var(--foreground)"
+          stroke-width="2"
+          stroke-linejoin="round"></path>
+      </svg>
+    </span>
+
+    <span
+      data-decor="mask"
+      data-speed="-0.7"
+      class="absolute top-[24%] right-[9%] will-change-transform"
+    >
+      <svg viewBox="0 0 64 64" class="h-12 w-12 opacity-80 md:h-18 md:w-18">
+        <path
+          d="M4 22 Q32 12 60 22 L54 38 Q44 46 32 42 Q20 46 10 38 Z"
+          fill="#ffffff"
+          stroke="var(--foreground)"
+          stroke-width="2"
+          stroke-linejoin="round"></path>
+        <path d="M12 26 Q20 22 27 27 Q20 33 12 30 Z" fill="var(--foreground)"
+        ></path>
+        <path d="M52 26 Q44 22 37 27 Q44 33 52 30 Z" fill="var(--foreground)"
+        ></path>
+      </svg>
+    </span>
+
+    <span
+      data-decor="spade"
+      data-speed="0.95"
+      class="absolute bottom-[22%] left-[13%] hidden will-change-transform md:block"
+    >
+      <svg viewBox="0 0 64 64" class="h-14 w-14 opacity-70">
+        <path
+          d="M32 8 Q52 26 52 36 Q52 46 42 46 Q36 46 33 42 Q35 52 39 56 L25 56 Q29 52 31 42 Q28 46 22 46 Q12 46 12 36 Q12 26 32 8 Z"
+          fill="var(--foreground)"
+          stroke="var(--accent)"
+          stroke-width="2"
+          stroke-linejoin="round"></path>
+      </svg>
+    </span>
+
+    <span
+      data-decor="shard"
+      data-speed="-0.4"
+      class="absolute right-[14%] bottom-[26%] hidden will-change-transform md:block"
+    >
+      <svg viewBox="0 0 64 64" class="h-12 w-12 opacity-70">
+        <path
+          d="M10 46 L38 6 L54 18 L26 58 Z"
+          fill="var(--accent)"
+          stroke="var(--foreground)"
+          stroke-width="2"
+          stroke-linejoin="round"></path>
+      </svg>
+    </span>
+  </div>
+
+  {/* L5 · 主体 */}
+  <div class="relative z-10 flex flex-col items-center px-6 text-center">
+    <div class="relative">
+      <h1
+        id="hero-title"
+        aria-label={title}
+        class="font-heading text-foreground text-[clamp(3rem,12vw,9rem)] leading-[1.05] tracking-[0.04em]"
+        style="text-shadow: 6px 6px 0 var(--accent);"
+      >
+        {
+          chars.map((char, index) => (
+            <span
+              aria-hidden="true"
+              class="hero-char inline-block will-change-transform"
+              style={charStyle(index)}
+            >
+              {char === " " ? " " : char}
+            </span>
+          ))
+        }
+      </h1>
+
+      <span
+        class="hero-sticker font-hand border-foreground bg-accent absolute -top-7 -right-2 rotate-[-8deg] border-2 px-4 py-1 text-[clamp(1rem,2.4vw,1.5rem)] font-bold text-white shadow-[3px_3px_0_var(--foreground)] md:-top-4 md:-right-28"
+      >
+        Take your heart!
+      </span>
+    </div>
+
+    <p
+      class="hero-sub font-hand text-foreground-secondary mt-4 text-[clamp(1.1rem,3vw,1.8rem)] md:mt-6"
+    >
+      Ars longa, vita brevis.
+    </p>
+  </div>
+
+  {/* 滚动引导 —— 不然首屏之后有什么完全没有提示 */}
+  <a
+    href="#below-hero"
+    class="hero-scroll text-foreground-secondary hover:text-accent absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1.5 transition-colors"
+    aria-label="向下滚动"
+  >
+    <span class="font-heading text-xs tracking-[0.3em]">SCROLL</span>
+    <svg
+      viewBox="0 0 24 24"
+      class="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      aria-hidden="true"
+    >
+      <path d="M5 8 L12 16 L19 8" stroke-linecap="square"></path>
+    </svg>
+  </a>
+</section>
+
+{/* 呼吸空档 */}
+<div id="below-hero" class="h-[20vh]" aria-hidden="true"></div>
+
+<style>
+  /* 箭头缓慢上下浮动，示意可以往下 */
+  .hero-scroll {
+    animation:
+      fade-in 600ms ease-out 1600ms both,
+      scroll-bob 2.2s ease-in-out 2200ms infinite;
+  }
+
+  @keyframes scroll-bob {
+    0%,
+    100% {
+      transform: translate(-50%, 0);
+    }
+    50% {
+      transform: translate(-50%, 6px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-scroll {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  function initHeroParallax() {
+    const decor = document.getElementById("hero-decor");
+    if (!decor) return;
+    if (decor.dataset.bound === "true") return;
+    decor.dataset.bound = "true";
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+
+    const items = [...decor.querySelectorAll<HTMLElement>("[data-speed]")];
+    if (!items.length) return;
+
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+
+    window.addEventListener(
+      "mousemove",
+      (event: MouseEvent) => {
+        // 归一化到 [-1, 1]
+        targetX = (event.clientX / window.innerWidth) * 2 - 1;
+        targetY = (event.clientY / window.innerHeight) * 2 - 1;
+      },
+      { passive: true },
+    );
+
+    function frame() {
+      currentX += (targetX - currentX) * 0.06;
+      currentY += (targetY - currentY) * 0.06;
+
+      for (const item of items) {
+        const speed = Number(item.dataset.speed) || 0;
+        item.style.transform = `translate(${currentX * speed * 26}px, ${
+          currentY * speed * 26
+        }px)`;
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  document.addEventListener("DOMContentLoaded", initHeroParallax);
+  document.addEventListener("astro:page-load", initHeroParallax);
+</script>

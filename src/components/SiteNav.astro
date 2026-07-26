@@ -1,0 +1,160 @@
+---
+import ThemeToggle from "./ThemeToggle";
+import IconRss from "../assets/icons/rss.svg";
+import IconMenu from "../assets/icons/menu.svg";
+import IconX from "../assets/icons/x.svg";
+
+const pathname = Astro.url.pathname;
+
+const links = [
+  { href: "/", label: "首页", match: (p: string) => p === "/" },
+  { href: "/blog", label: "博客", match: (p: string) => p.startsWith("/blog") },
+  {
+    href: "/about",
+    label: "关于",
+    match: (p: string) => p.startsWith("/about"),
+  },
+];
+---
+
+<nav
+  class="header-nav border-border bg-background fixed top-0 right-0 left-0 z-50 w-full border-b-2 transition-transform duration-300 ease-in-out"
+  data-open="false"
+  data-scroll-direction="up"
+>
+  <div
+    class="mx-auto flex max-w-[1280px] items-center justify-between px-4 py-3"
+  >
+    {/* Brand */}
+    <a
+      href="/"
+      class="group flex items-center gap-0.5 select-none"
+      aria-label="Sage Forge 首页"
+    >
+      <span
+        class="bg-accent font-heading -skew-x-12 border-2 border-black px-3 py-1 text-lg tracking-wider text-white transition-transform duration-200 group-hover:skew-x-0"
+      >
+        Sage Forge
+      </span>
+      <span
+        class="font-heading bg-foreground text-background border-background relative z-10 -ml-2 -skew-x-12 border-2 px-3 py-1 text-lg tracking-wider transition-transform duration-200 group-hover:skew-x-0"
+      >
+        贤者工坊
+      </span>
+    </a>
+
+    {/* Desktop links + actions */}
+    <div class="flex items-center gap-3">
+      <ul
+        id="primary-nav"
+        class="border-border bg-background pointer-events-none absolute top-full right-0 left-0 z-40 hidden flex-col gap-1 border-b-2 p-4 opacity-0 transition-all duration-200 ease-out sm:pointer-events-auto sm:static sm:flex sm:flex-row sm:items-center sm:gap-1 sm:border-0 sm:p-0 sm:opacity-100"
+      >
+        {
+          links.map((link, index) => (
+            <>
+              {index > 0 && (
+                <li class="nav-separator hidden select-none sm:inline">/</li>
+              )}
+              <li class="w-full sm:w-auto">
+                <a
+                  href={link.href}
+                  class:list={[
+                    "nav-link block sm:inline-block",
+                    link.match(pathname) && "active",
+                  ]}
+                  aria-current={link.match(pathname) ? "page" : undefined}
+                >
+                  {link.label}
+                </a>
+              </li>
+            </>
+          ))
+        }
+      </ul>
+
+      {/* RSS — 旋转星形 */}
+      <a
+        href="/rss.xml"
+        aria-label="RSS"
+        title="RSS"
+        class="group relative flex h-9 w-9 items-center justify-center"
+      >
+        <span
+          class="bg-foreground group-hover:bg-accent absolute inset-0 rotate-45 border-2 border-transparent transition-all duration-500 group-hover:rotate-180"
+          aria-hidden="true"></span>
+        <IconRss
+          class="text-background relative z-10 h-4 w-4 transition-transform group-hover:scale-110"
+        />
+      </a>
+
+      <ThemeToggle client:idle />
+
+      {/* Mobile hamburger */}
+      <button
+        id="nav-toggle"
+        class="border-border hover:border-accent flex h-9 w-9 items-center justify-center border-2 transition-colors sm:hidden"
+        aria-label="打开菜单"
+        aria-expanded="false"
+        aria-controls="primary-nav"
+      >
+        <IconMenu class="stroke-foreground h-5 w-5" data-nav-icon="open" />
+        <IconX class="stroke-foreground hidden h-5 w-5" data-nav-icon="close" />
+      </button>
+    </div>
+  </div>
+</nav>
+
+{/* 顶栏是 fixed，用一个等高占位撑开文档流 */}
+<div class="h-[var(--nav-height)]" aria-hidden="true"></div>
+
+<script>
+  function initNav() {
+    const nav = document.querySelector<HTMLElement>(".header-nav");
+    const toggle = document.getElementById("nav-toggle");
+    const list = document.getElementById("primary-nav");
+    if (!nav || !toggle || !list) return;
+
+    if (nav.dataset.bound === "true") return;
+    nav.dataset.bound = "true";
+
+    const iconOpen = toggle.querySelector<SVGElement>('[data-nav-icon="open"]');
+    const iconClose = toggle.querySelector<SVGElement>(
+      '[data-nav-icon="close"]',
+    );
+
+    // 移动端展开 / 收起
+    toggle.addEventListener("click", () => {
+      const open = nav.dataset.open !== "true";
+      nav.dataset.open = String(open);
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.setAttribute("aria-label", open ? "关闭菜单" : "打开菜单");
+      list.classList.toggle("hidden", !open);
+      list.classList.toggle("flex", open);
+      list.classList.toggle("opacity-0", !open);
+      list.classList.toggle("pointer-events-none", !open);
+      iconOpen?.classList.toggle("hidden", open);
+      iconClose?.classList.toggle("hidden", !open);
+    });
+
+    // 下滑收起 / 上滑露出；菜单展开时不收
+    let lastY = window.scrollY;
+    window.addEventListener(
+      "scroll",
+      () => {
+        const y = window.scrollY;
+        if (nav.dataset.open === "true") return;
+        // 顶部一小段始终显示，避免抖动
+        if (y < 80) {
+          nav.dataset.scrollDirection = "up";
+        } else if (Math.abs(y - lastY) > 6) {
+          nav.dataset.scrollDirection = y > lastY ? "down" : "up";
+        }
+        lastY = y;
+      },
+      { passive: true },
+    );
+  }
+
+  document.addEventListener("DOMContentLoaded", initNav);
+  document.addEventListener("astro:page-load", initNav);
+</script>

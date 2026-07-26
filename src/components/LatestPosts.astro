@@ -1,0 +1,48 @@
+---
+import { getCollection } from "astro:content";
+import type { BlogType } from "../content.config";
+
+export interface Props {
+  /** 最多显示几篇 / cap on rendered rows */
+  limit?: number;
+}
+
+const { limit = 6 } = Astro.props;
+
+const blogs: BlogType[] = await getCollection("blogs");
+
+// readTime 与 blog/[...slug].astro 的 getStaticPaths 保持同一算法（词数 ÷ 200）
+const posts = blogs
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, limit)
+  .map((blog) => ({
+    slug: blog.data.slug,
+    title: blog.data.title,
+    date: blog.data.date,
+    readTime: Math.ceil(
+      (blog.body ?? "").split(/\s+/).filter(Boolean).length / 200,
+    ),
+  }));
+---
+
+<div class="post-list flex flex-col gap-1">
+  {
+    posts.map((post) => (
+      <a href={`/blog/${post.slug}`} class="latest-post-row">
+        <span class="bloom" aria-hidden="true" />
+        <h3 class="post-title m-0 text-base">{post.title}</h3>
+        <span class="post-date font-mono whitespace-nowrap">
+          <time datetime={post.date.toISOString()}>
+            {post.date.toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </time>
+          <span aria-hidden="true"> · </span>
+          {post.readTime} min
+        </span>
+      </a>
+    ))
+  }
+</div>

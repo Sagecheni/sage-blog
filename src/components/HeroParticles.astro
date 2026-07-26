@@ -1,0 +1,161 @@
+---
+// Hero 的 L2/L3 粒子层：后层是缓慢上浮的红色菱形碎片，前层是细小快速的白/红光点。
+// 纯 canvas，不做 React island —— 省一次 hydration。
+---
+
+<div
+  class="pointer-events-none absolute inset-0 overflow-hidden"
+  data-hero-particles
+  aria-hidden="true"
+>
+  <canvas class="absolute inset-0 h-full w-full" data-layer="back"></canvas>
+  <canvas class="absolute inset-0 h-full w-full" data-layer="front"></canvas>
+</div>
+
+<script>
+  type Shard = {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    size: number;
+    rot: number;
+    vr: number;
+    alpha: number;
+    color: string;
+  };
+
+  function initHeroParticles() {
+    const host = document.querySelector<HTMLElement>("[data-hero-particles]");
+    if (!host) return;
+    if (host.dataset.bound === "true") return;
+    host.dataset.bound = "true";
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const back = host.querySelector<HTMLCanvasElement>('[data-layer="back"]');
+    const front = host.querySelector<HTMLCanvasElement>('[data-layer="front"]');
+    const backCtx = back?.getContext("2d");
+    const frontCtx = front?.getContext("2d");
+    if (!back || !front || !backCtx || !frontCtx) return;
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    let backShards: Shard[] = [];
+    let frontShards: Shard[] = [];
+    let raf = 0;
+    let running = false;
+
+    function makeShard(large: boolean): Shard {
+      return {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * (large ? 0.15 : 0.35),
+        vy: -(0.15 + Math.random() * (large ? 0.35 : 0.7)),
+        size: large ? 8 + Math.random() * 18 : 2 + Math.random() * 4,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.01,
+        alpha: large
+          ? 0.08 + Math.random() * 0.14
+          : 0.25 + Math.random() * 0.45,
+        color: Math.random() > 0.35 ? "#d8000c" : "#ffffff",
+      };
+    }
+
+    function resize() {
+      width = host!.clientWidth;
+      height = host!.clientHeight;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      for (const canvas of [back!, front!]) {
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+      }
+      backCtx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      frontCtx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // 密度跟随面积，窄屏不至于糊满
+      const area = width * height;
+      const backCount = Math.round(Math.min(46, area / 26000));
+      const frontCount = Math.round(Math.min(80, area / 14000));
+      backShards = Array.from({ length: backCount }, () => makeShard(true));
+      frontShards = Array.from({ length: frontCount }, () => makeShard(false));
+    }
+
+    function draw(
+      ctx: CanvasRenderingContext2D,
+      shards: Shard[],
+      diamond: boolean,
+    ) {
+      ctx.clearRect(0, 0, width, height);
+      for (const s of shards) {
+        s.x += s.vx;
+        s.y += s.vy;
+        s.rot += s.vr;
+
+        // 飘出上边界后从下方重新入场
+        if (s.y < -s.size) {
+          s.y = height + s.size;
+          s.x = Math.random() * width;
+        }
+        if (s.x < -s.size) s.x = width + s.size;
+        if (s.x > width + s.size) s.x = -s.size;
+
+        ctx.save();
+        ctx.globalAlpha = s.alpha;
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.rot);
+        ctx.fillStyle = s.color;
+        if (diamond) {
+          ctx.beginPath();
+          ctx.moveTo(0, -s.size);
+          ctx.lineTo(s.size * 0.6, 0);
+          ctx.lineTo(0, s.size);
+          ctx.lineTo(-s.size * 0.6, 0);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.fillRect(-s.size / 2, -s.size / 2, s.size, s.size);
+        }
+        ctx.restore();
+      }
+    }
+
+    function frame() {
+      draw(backCtx!, backShards, true);
+      draw(frontCtx!, frontShards, false);
+      raf = requestAnimationFrame(frame);
+    }
+
+    function start() {
+      if (running) return;
+      running = true;
+      raf = requestAnimationFrame(frame);
+    }
+
+    function stop() {
+      running = false;
+      cancelAnimationFrame(raf);
+    }
+
+    resize();
+    start();
+
+    window.addEventListener("resize", resize, { passive: true });
+
+    // Hero 滚出视口 / 标签页隐藏时停掉 rAF
+    const observer = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? start() : stop()),
+      { threshold: 0 },
+    );
+    observer.observe(host);
+
+    document.addEventListener("visibilitychange", () =>
+      document.hidden ? stop() : start(),
+    );
+  }
+
+  document.addEventListener("DOMContentLoaded", initHeroParticles);
+  document.addEventListener("astro:page-load", initHeroParticles);
+</script>

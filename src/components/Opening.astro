@@ -1,0 +1,484 @@
+---
+// 四幕开场（仅首页）：
+//   ① 贴纸落位  ② 预告函充能  ③ 红黑碎片爆发（canvas + 双层冲击波 + 白闪）  ④ 贴纸交接给 Hero
+// data-key 与 Hero.astro 的 data-decor 一一对应，爆发后贴纸飞向对应装饰位。
+// 一次会话只播一次（sessionStorage）；prefers-reduced-motion 下直接不渲染。
+---
+
+{/* 禁用 JS 时脚本移除不了这层全屏遮罩，必须用 noscript 兜底藏掉 */}
+<noscript>
+  <style>
+    #opening-animation {
+      display: none;
+    }
+  </style>
+</noscript>
+
+<div
+  id="opening-animation"
+  class="fixed inset-0 z-[9999] overflow-hidden select-none"
+  aria-hidden="true"
+>
+  {/* 底：与 Hero 渐变对齐，第四幕整体淡出 */}
+  <div
+    id="opening-mask"
+    class="absolute inset-0"
+    style="background: linear-gradient(180deg, var(--background) 0%, var(--surface) 55%, var(--background) 100%);"
+  >
+  </div>
+
+  {/* 贴纸 1 · 五角星 */}
+  <svg
+    data-key="star"
+    viewBox="0 0 64 64"
+    class="intro-sticker absolute top-[26%] left-[18%] h-16 w-16 md:top-[30%] md:left-[26%] md:h-24 md:w-24"
+  >
+    <path
+      d="M32 4 L39 24 L60 24 L43 37 L49 58 L32 45 L15 58 L21 37 L4 24 L25 24 Z"
+      fill="var(--accent)"
+      stroke="var(--foreground)"
+      stroke-width="2"
+      stroke-linejoin="round"></path>
+  </svg>
+
+  {/* 贴纸 2 · 怪盗面具 */}
+  <svg
+    data-key="mask"
+    viewBox="0 0 64 64"
+    class="intro-sticker absolute top-[30%] right-[16%] h-14 w-14 md:top-[36%] md:right-[24%] md:h-20 md:w-20"
+  >
+    <path
+      d="M4 22 Q32 12 60 22 L54 38 Q44 46 32 42 Q20 46 10 38 Z"
+      fill="#ffffff"
+      stroke="var(--foreground)"
+      stroke-width="2"
+      stroke-linejoin="round"></path>
+    <path d="M12 26 Q20 22 27 27 Q20 33 12 30 Z" fill="var(--foreground)"
+    ></path>
+    <path d="M52 26 Q44 22 37 27 Q44 33 52 30 Z" fill="var(--foreground)"
+    ></path>
+  </svg>
+
+  {/* 贴纸 3 · 黑桃 */}
+  <svg
+    data-key="spade"
+    viewBox="0 0 64 64"
+    class="intro-sticker absolute bottom-[24%] left-[30%] h-12 w-12 md:bottom-[28%] md:left-[40%] md:h-16 md:w-16"
+  >
+    <path
+      d="M32 8 Q52 26 52 36 Q52 46 42 46 Q36 46 33 42 Q35 52 39 56 L25 56 Q29 52 31 42 Q28 46 22 46 Q12 46 12 36 Q12 26 32 8 Z"
+      fill="var(--foreground)"
+      stroke="var(--accent)"
+      stroke-width="2"
+      stroke-linejoin="round"></path>
+  </svg>
+
+  {/* 贴纸 4 · 红色斜切碎片 */}
+  <svg
+    data-key="shard"
+    viewBox="0 0 64 64"
+    class="intro-sticker absolute right-[20%] bottom-[28%] hidden h-14 w-14 md:block"
+  >
+    <path
+      d="M10 46 L38 6 L54 18 L26 58 Z"
+      fill="var(--accent)"
+      stroke="var(--foreground)"
+      stroke-width="2"
+      stroke-linejoin="round"></path>
+  </svg>
+
+  {
+    /* 中心预告函：第二幕充能，第三幕撕裂弹飞。
+      牌面用红底而非白底 —— P5R 的予告状本来就是红黑配，
+      更重要的是品牌字是白色且压在正中，白底会让它消失（对比度 1:1）。
+      红底 #d8000c 对白字约 5.2:1，压上去照样读得出来。 */
+  }
+  <div class="intro-card absolute inset-0 m-auto h-28 w-24 md:h-36 md:w-28">
+    <svg viewBox="0 0 64 80" class="h-full w-full overflow-visible">
+      <g class="intro-card-body">
+        <rect
+          x="6"
+          y="8"
+          width="52"
+          height="64"
+          fill="var(--accent)"
+          stroke="#ffffff"
+          stroke-width="2"></rect>
+        <rect x="6" y="8" width="52" height="12" fill="#000000"></rect>
+        <path
+          d="M32 28 L36 40 L49 40 L38 47 L42 60 L32 52 L22 60 L26 47 L15 40 L28 40 Z"
+          fill="#000000"
+          stroke="#ffffff"
+          stroke-width="1.5"
+          stroke-linejoin="round"></path>
+      </g>
+      {/* 撕裂线：第三幕沿此裂开 */}
+      <path
+        class="intro-card-tear"
+        d="M6 40 L20 36 L34 44 L48 38 L58 42"
+        stroke="#ffffff"
+        stroke-width="2"
+        fill="none"></path>
+    </svg>
+  </div>
+
+  {/* 品牌字 + 手写句，居中压在预告函上方，爆发时溶解 */}
+  <div
+    class="intro-center absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 md:gap-3"
+  >
+    <div
+      class="intro-brand font-heading text-foreground text-[clamp(1.8rem,6vw,3.4rem)] tracking-[0.08em]"
+    >
+      SAGE FORGE
+    </div>
+    <div
+      class="intro-tagline font-hand text-foreground-secondary text-[clamp(1rem,3vw,1.5rem)]"
+    >
+      Take your heart.
+    </div>
+  </div>
+
+  {/* 冲击波双环 */}
+  <div
+    class="intro-ring pointer-events-none absolute inset-0 m-auto h-28 w-28 rotate-45"
+  >
+  </div>
+  <div
+    class="intro-ring-2 pointer-events-none absolute inset-0 m-auto h-28 w-28 rotate-45"
+  >
+  </div>
+
+  {
+    /* 粒子爆发画布。canvas 是替换元素，inset-0 拉不动它 —— 必须显式 h-full w-full，
+      否则高 dpr 下画布按属性尺寸渲染，爆点会跑到右下角 */
+  }
+  <canvas
+    class="intro-burst pointer-events-none absolute inset-0 z-20 h-full w-full"
+  ></canvas>
+
+  {/* 红色闪帧 */}
+  <div
+    class="intro-flash pointer-events-none absolute inset-0 z-30"
+    style="background: var(--accent); opacity: 0;"
+  >
+  </div>
+</div>
+
+<style>
+  /* --- 时间轴 ---
+     0ms      贴纸落位（stagger 120ms）
+     900ms    品牌字浮现，预告函开始充能
+     1700ms   爆发
+     2400ms   整体淡出
+     2900ms   移除 DOM                                        */
+
+  .intro-sticker {
+    opacity: 0;
+    animation:
+      sticker-drop 600ms var(--ease-pop) forwards,
+      sticker-blast 700ms cubic-bezier(0.3, 0, 0.2, 1) 1700ms forwards;
+  }
+  .intro-sticker:nth-of-type(1) {
+    animation-delay: 0ms, 1700ms;
+    --blast-x: -46vw;
+    --blast-y: -30vh;
+    --blast-r: -140deg;
+  }
+  .intro-sticker:nth-of-type(2) {
+    animation-delay: 120ms, 1700ms;
+    --blast-x: 46vw;
+    --blast-y: -26vh;
+    --blast-r: 160deg;
+  }
+  .intro-sticker:nth-of-type(3) {
+    animation-delay: 240ms, 1700ms;
+    --blast-x: -38vw;
+    --blast-y: 34vh;
+    --blast-r: 120deg;
+  }
+  .intro-sticker:nth-of-type(4) {
+    animation-delay: 360ms, 1700ms;
+    --blast-x: 40vw;
+    --blast-y: 32vh;
+    --blast-r: -180deg;
+  }
+
+  @keyframes sticker-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-40vh) rotate(-90deg) scale(0.4);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) rotate(0deg) scale(1);
+    }
+  }
+
+  @keyframes sticker-blast {
+    from {
+      opacity: 1;
+      transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translate(var(--blast-x), var(--blast-y))
+        rotate(var(--blast-r)) scale(0.3);
+    }
+  }
+
+  /* 预告函：落位 → 抖动充能 → 撕裂弹飞 */
+  .intro-card {
+    opacity: 0;
+    animation:
+      card-in 600ms var(--ease-pop) 500ms forwards,
+      card-charge 800ms ease-in-out 900ms,
+      card-blast 500ms cubic-bezier(0.3, 0, 0.2, 1) 1700ms forwards;
+  }
+
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: rotate(-24deg) scale(0.3);
+    }
+    to {
+      opacity: 1;
+      transform: rotate(-8deg) scale(1);
+    }
+  }
+
+  @keyframes card-charge {
+    0%,
+    100% {
+      transform: rotate(-8deg) scale(1);
+    }
+    25% {
+      transform: rotate(-6deg) scale(1.08) translateX(3px);
+    }
+    50% {
+      transform: rotate(-10deg) scale(1.04) translateX(-3px);
+    }
+    75% {
+      transform: rotate(-5deg) scale(1.12) translateX(2px);
+    }
+  }
+
+  @keyframes card-blast {
+    from {
+      opacity: 1;
+      transform: rotate(-8deg) scale(1.12);
+    }
+    to {
+      opacity: 0;
+      transform: rotate(30deg) scale(2.4);
+    }
+  }
+
+  .intro-card-tear {
+    stroke-dasharray: 80;
+    stroke-dashoffset: 80;
+    animation: tear 260ms ease-out 1700ms forwards;
+  }
+
+  @keyframes tear {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* 品牌字：浮现 → 溶解 */
+  .intro-center {
+    opacity: 0;
+    animation:
+      brand-in 500ms ease-out 900ms forwards,
+      brand-out 400ms ease-in 1700ms forwards;
+  }
+
+  /* 兜底：万一压到浅色的贴纸或牌面上，描边 + 红投影也能把字形托出来
+     （与 about.astro 的 WANTED 处理同一套路） */
+  .intro-brand {
+    -webkit-text-stroke: 1.5px var(--background);
+    paint-order: stroke fill;
+    text-shadow: 3px 3px 0 var(--accent);
+  }
+
+  @keyframes brand-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes brand-out {
+    to {
+      opacity: 0;
+      transform: scale(1.25);
+      filter: blur(6px);
+    }
+  }
+
+  /* 冲击波双环 */
+  .intro-ring,
+  .intro-ring-2 {
+    opacity: 0;
+    border: 4px solid var(--accent);
+  }
+  .intro-ring {
+    animation: shock 700ms cubic-bezier(0.2, 0.8, 0.3, 1) 1700ms forwards;
+  }
+  .intro-ring-2 {
+    border-color: var(--foreground);
+    animation: shock 700ms cubic-bezier(0.2, 0.8, 0.3, 1) 1820ms forwards;
+  }
+
+  @keyframes shock {
+    0% {
+      opacity: 0.9;
+      transform: rotate(45deg) scale(0.2);
+    }
+    100% {
+      opacity: 0;
+      transform: rotate(45deg) scale(16);
+    }
+  }
+
+  /* 红闪帧 */
+  .intro-flash {
+    animation: flash 320ms ease-out 1700ms forwards;
+  }
+
+  @keyframes flash {
+    0% {
+      opacity: 0;
+    }
+    30% {
+      opacity: 0.85;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* 整体淡出 */
+  #opening-animation.is-done {
+    opacity: 0;
+    transition: opacity 500ms ease-out;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  const BURST_AT = 1700;
+  const FADE_AT = 2400;
+  const REMOVE_AT = 2900;
+
+  function initOpening() {
+    const root = document.getElementById("opening-animation");
+    if (!root) return;
+
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const played = sessionStorage.getItem("opening-played") === "true";
+
+    // 已播过 / 减少动效：直接移除，不占屏
+    if (reduced || played) {
+      root.remove();
+      return;
+    }
+
+    sessionStorage.setItem("opening-played", "true");
+    // 动画期间锁滚动
+    document.documentElement.style.overflow = "hidden";
+
+    const timers: number[] = [];
+    timers.push(window.setTimeout(fireBurst, BURST_AT));
+    timers.push(
+      window.setTimeout(() => {
+        root.classList.add("is-done");
+        document.documentElement.style.overflow = "";
+      }, FADE_AT),
+    );
+    timers.push(window.setTimeout(() => root.remove(), REMOVE_AT));
+
+    function fireBurst() {
+      const canvas = root!.querySelector<HTMLCanvasElement>(".intro-burst");
+      const ctx = canvas?.getContext("2d");
+      if (!canvas || !ctx) return;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.scale(dpr, dpr);
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const colors = ["#d8000c", "#ffffff", "#ff2b38", "#111111"];
+
+      const shards = Array.from({ length: 150 }, () => {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 4 + Math.random() * 15;
+        return {
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: 4 + Math.random() * 10,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1,
+        };
+      });
+
+      function frame() {
+        ctx!.clearRect(0, 0, w, h);
+        let alive = false;
+
+        for (const s of shards) {
+          if (s.life <= 0) continue;
+          alive = true;
+
+          s.x += s.vx;
+          s.y += s.vy;
+          s.vy += 0.2; // 重力
+          s.vx *= 0.985;
+          s.vy *= 0.985;
+          s.rot += s.vr;
+          s.life -= 0.013;
+
+          ctx!.save();
+          ctx!.globalAlpha = Math.max(s.life, 0);
+          ctx!.translate(s.x, s.y);
+          ctx!.rotate(s.rot);
+          ctx!.fillStyle = s.color;
+          // 细长矩形，像撕碎的纸片
+          ctx!.fillRect(-s.size / 2, -s.size / 4, s.size, s.size * 0.5);
+          ctx!.restore();
+        }
+
+        if (alive) requestAnimationFrame(frame);
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    // 用户中途跳走时清理，避免定时器把 overflow 卡住
+    window.addEventListener(
+      "pagehide",
+      () => {
+        timers.forEach((t) => clearTimeout(t));
+        document.documentElement.style.overflow = "";
+      },
+      { once: true },
+    );
+  }
+
+  document.addEventListener("DOMContentLoaded", initOpening);
+  document.addEventListener("astro:page-load", initOpening);
+</script>

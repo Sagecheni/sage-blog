@@ -5,9 +5,10 @@ export interface Props {
   author: string;
   url: string;
   pubDate?: Date;
-  isHome?: boolean;
-  showBackground?: boolean;
-  backgroundType?: 'home' | 'blog' | 'none';
+  /** hero = 首页，内容自带全屏 Hero，不加页面底纹；plain = 其余页面 */
+  backgroundType?: "hero" | "plain";
+  /** 是否播放开场动画（仅首页） */
+  opening?: boolean;
 }
 
 import "@fontsource-variable/space-grotesk";
@@ -16,24 +17,20 @@ import "@fontsource/bangers";
 import "@fontsource/zcool-qingke-huangyou";
 import "lxgw-wenkai-screen-web/lxgwwenkaigbscreen/result.css";
 import Seo from "../components/Seo.astro";
-import Header from "../components/Header.astro";
-import P5RLoader from "../components/P5RLoader.astro";
+import SiteNav from "../components/SiteNav.astro";
+import Footer from "../components/Footer.astro";
+import Opening from "../components/Opening.astro";
 import "../styles/global.css";
-import { Image } from "astro:assets";
-import homeBg from "../assets/images/character6.jpeg";
 
-const { title, description, author, url, pubDate, showBackground = true, backgroundType } = Astro.props;
-
-// Determine which background class to use
-let bgClass = "";
-if (backgroundType === 'home') {
-  bgClass = "home-geometry";
-} else if (backgroundType === 'blog') {
-  bgClass = "blog-texture";
-} else if (showBackground) {
-  // Fallback for existing boolean prop
-  bgClass = "home-geometry";
-}
+const {
+  title,
+  description,
+  author,
+  url,
+  pubDate,
+  backgroundType = "plain",
+  opening = false,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -45,32 +42,62 @@ if (backgroundType === 'home') {
     <meta name="generator" content={Astro.generator} />
     <Seo {title} {description} {author} {url} {pubDate} />
     <script is:inline>
-      document.documentElement.classList.add("dark");
+      // 预绘制主题：先读 localStorage 再落 class，避免 ThemeToggle 挂载时闪一下。
+      // 默认 dark（P5R 本体就是暗的）。
+      // 同时打上 .js 标记 —— 滚动揭示的初始隐藏态只在有 JS 时生效，
+      // 禁用 JS 的访客直接看到完整内容，而不是永久空白。
+      (() => {
+        document.documentElement.classList.add("js");
+        const saved = localStorage.getItem("theme");
+        const theme = saved === "light" || saved === "dark" ? saved : "dark";
+        document.documentElement.classList.add(theme);
+      })();
     </script>
   </head>
-  <body class:list={["min-h-svh", bgClass]}>
-    {/* Optimized Home Background with Overlay */}
-    {bgClass === 'home-geometry' && (
-      <div class="fixed inset-0 -z-10 select-none">
-        <div class="absolute inset-0 z-10 bg-black/60"></div>
-        <Image 
-          src={homeBg} 
-          alt="Persona 5 Royal Background" 
-          class="w-full h-full object-cover"
-          widths={[640, 1024, 1600, homeBg.width]}
-          sizes={`(max-width: 640px) 640px, (max-width: 1024px) 1024px, (max-width: 1600px) 1600px, ${homeBg.width}px`}
-          quality="mid"
-          loading="eager"
-          fetchpriority="high"
-        />
-      </div>
-    )}
-    <P5RLoader />
-    <div class="body-margin flex flex-col min-h-svh">
-      <Header />
-      <main class="main-margin relative z-1 flex-1">
-        <slot />
-      </main>
-    </div>
+  <body
+    class:list={[
+      "flex min-h-svh flex-col",
+      backgroundType === "plain" && "page-texture",
+    ]}
+  >
+    {opening && <Opening />}
+    <SiteNav />
+
+    <main class="relative z-[1] flex-1">
+      <slot />
+    </main>
+
+    <Footer />
+
+    <script>
+      // 滚动揭示：给进入视口的 .landing-section 加 .is-visible（分级延迟由 CSS 的 .delay-* 控制）
+      function initReveal() {
+        const sections = document.querySelectorAll<HTMLElement>(
+          ".landing-section:not(.is-visible)",
+        );
+        if (!sections.length) return;
+
+        if (!("IntersectionObserver" in window)) {
+          sections.forEach((el) => el.classList.add("is-visible"));
+          return;
+        }
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          },
+          { rootMargin: "0px 0px -10% 0px", threshold: 0.05 },
+        );
+
+        sections.forEach((el) => observer.observe(el));
+      }
+
+      document.addEventListener("DOMContentLoaded", initReveal);
+      document.addEventListener("astro:page-load", initReveal);
+    </script>
   </body>
 </html>

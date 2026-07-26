@@ -1,27 +1,35 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
 import { Image } from "astro:assets";
+import BaseLayout from "../layouts/BaseLayout.astro";
 import notFoundImage from "../assets/images/404.png";
 ---
 
 <BaseLayout
-  title="Ryze"
-  description="A minimalist Astro starter for personal blogs."
-  author="Rahul"
-  url=""
+  title="404｜贤者工坊"
+  description="没有找到该页面"
+  author="SageChen"
+  url="https://blog.sagec.fun/404"
 >
-<div class="flex flex-col items-center justify-center min-h-[60vh] gap-8">
+  <div
+    class="mx-auto flex min-h-[60vh] max-w-[1280px] flex-col items-center justify-center gap-8 px-4 py-16"
+  >
     <Image
       src={notFoundImage}
       alt="没有找到该页面"
-      class="max-w-[600px] w-full h-auto object-cover rounded-xl shadow-2xl"
+      class="border-border h-auto w-full max-w-[600px] border-2 object-cover shadow-[8px_8px_0_var(--accent)]"
     />
-    <h1 class="text-3xl font-bold text-neutral-900 dark:text-white">没有找到该页面</h1>
+
+    <h1
+      class="font-heading text-foreground text-4xl tracking-widest md:text-5xl"
+    >
+      404 — 没有找到该页面
+    </h1>
+
     <a
       href="/"
-      class="px-8 py-3 bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 rounded-full font-bold text-lg transition-all hover:scale-105 hover:shadow-lg"
+      class="border-foreground hover:bg-accent hover:border-accent -skew-x-12 border-2 px-8 py-2 text-lg font-bold transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
     >
-      返回首页
+      <span class="block skew-x-12">返回首页</span>
     </a>
   </div>
 </BaseLayout>

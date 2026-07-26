@@ -1,0 +1,37 @@
+---
+export interface Props {
+  /** 卡片标题；省略则不渲染标题行 / omit to skip the heading row */
+  title?: string;
+  /** 右上角切角装饰 / P5R corner notch */
+  notch?: boolean;
+  /** hover 时抬起并转成 accent 边框；静态面板保持 false */
+  interactive?: boolean;
+  class?: string;
+}
+
+const {
+  title,
+  notch = true,
+  interactive = false,
+  class: className = "",
+} = Astro.props;
+---
+
+<div
+  class:list={["card p-4 md:p-6", interactive && "is-interactive", className]}
+>
+  {notch && <span class="card-notch" aria-hidden="true" />}
+
+  {
+    title && (
+      <div class="mb-4 flex items-center gap-2">
+        <span class="bg-accent block h-4 w-1" aria-hidden="true" />
+        <h2 class="font-heading text-accent m-0 text-xl tracking-wider">
+          {title}
+        </h2>
+      </div>
+    )
+  }
+
+  <slot />
+</div>

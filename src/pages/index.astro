@@ -1,28 +1,111 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Introduction from "../components/Introduction.astro";
-import Recents from "../components/Recents.astro";
-import Socials from "../components/Socials.astro";
+import Hero from "../components/Hero.astro";
+import Card from "../components/Card.astro";
+import ProfileCard from "../components/ProfileCard.astro";
+import LatestPosts from "../components/LatestPosts.astro";
+import IconGithub from "../assets/icons/brand-github.svg";
+import IconRss from "../assets/icons/rss.svg";
 
+const socials = [
+  { label: "GitHub", href: "https://github.com/Sagecheni", icon: IconGithub },
+  { label: "RSS", href: "/rss.xml", icon: IconRss },
+];
 ---
 
 <BaseLayout
   title="Sage Forge｜贤者工坊"
-  description="Sage Forge｜贤者工坊"
+  description="Sage Forge｜贤者工坊 — SageChen 的个人博客"
   author="SageChen"
   url="https://blog.sagec.fun"
-  isHome={true}
+  backgroundType="hero"
+  opening={true}
 >
-  <div class="center">
-    <section>
-      <Introduction />
-    </section>
-    <section>
-      <Recents />
-    </section>
-    <hr />
-    <section>
-      <Socials />
-    </section>
+  <Hero />
+
+  <div class="mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-4 py-8">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-[2fr_5fr]">
+      {/* 左列 */}
+      <div class="landing-section flex flex-col gap-8 delay-100">
+        <ProfileCard />
+
+        <Card title="Socials">
+          <ul class="m-0 flex list-none flex-col gap-1 p-0">
+            {
+              socials.map((social) => (
+                <li>
+                  <a
+                    href={social.href}
+                    class="social-row"
+                    target={social.href.startsWith("http") ? "_blank" : null}
+                    rel={
+                      social.href.startsWith("http")
+                        ? "noopener noreferrer"
+                        : null
+                    }
+                  >
+                    <social.icon class="stroke-foreground h-5 w-5 stroke-1" />
+                    <span>{social.label}</span>
+                  </a>
+                </li>
+              ))
+            }
+            <li>
+              <a href="mailto:sagecheni@outlook.com" class="social-row">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  class="stroke-foreground h-5 w-5"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="1"></rect>
+                  <path d="m3 7 9 6 9-6"></path>
+                </svg>
+                <span>Email</span>
+              </a>
+            </li>
+          </ul>
+        </Card>
+      </div>
+
+      {/* 右列 */}
+      <div class="flex flex-col gap-8">
+        <div class="landing-section delay-200">
+          <Card title="About Me">
+            <div
+              class="text-foreground-secondary space-y-3 text-sm leading-relaxed"
+            >
+              <p>
+                在北邮读人工智能，白天调模型，晚上给 NAS 加点没人需要的小功能。
+              </p>
+              <p>
+                这里堆放一些技术笔记、踩坑记录，和偶尔的胡思乱想。写得慢，但尽量写清楚。
+              </p>
+            </div>
+          </Card>
+        </div>
+
+        {/* 分隔线 */}
+        <div class="landing-section my-2 flex items-center gap-4 delay-300">
+          <hr class="bg-accent m-0 h-0.5 flex-1 border-none" />
+          <span class="font-heading text-accent text-sm tracking-widest">
+            LATEST POSTS
+          </span>
+          <hr class="bg-accent m-0 h-0.5 flex-1 border-none" />
+        </div>
+
+        <div class="landing-section delay-400">
+          <LatestPosts limit={6} />
+
+          <a
+            href="/blog"
+            class="border-foreground hover:bg-accent hover:border-accent mt-6 inline-block -skew-x-12 border-2 px-5 py-1.5 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
+          >
+            <span class="block skew-x-12">全部文章 →</span>
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 </BaseLayout>
