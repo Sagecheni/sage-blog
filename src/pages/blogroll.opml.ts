@@ -1,6 +1,5 @@
 import { site } from "../data/site";
 import { friends } from "../data/friends";
-import type { APIContext } from "astro";
 
 // 友链订阅表（OPML 2.0）—— 独立博客圈礼节：
 // 访客一键把本站友链圈导入自己的 RSS 阅读器。只收录填了 feed 的友链。
@@ -11,7 +10,7 @@ const escapeXml = (text: string) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
-export function GET(_context: APIContext) {
+export function GET() {
   const outlines = friends
     .filter((friend) => friend.feed)
     .map(
