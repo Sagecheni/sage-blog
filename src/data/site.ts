@@ -11,5 +11,6 @@ export const site = {
   description: "SageChen 的个人博客 —— 技术笔记、踩坑记录，和偶尔的胡思乱想。",
   author: "SageChen",
   url: "https://blog.sagec.fun",
+  repo: "https://github.com/Sagecheni/sage-blog",
   locale: "zh_CN",
 } as const;

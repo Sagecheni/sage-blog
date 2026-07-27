@@ -30,8 +30,17 @@ function buildIndex() {
       if (!fm) continue;
       const slug = fm[1].match(/^slug:\s*["']?([^"'\n]+)["']?\s*$/m)?.[1];
       const title = fm[1].match(/^title:\s*["']?([^"'\n]+)["']?\s*$/m)?.[1];
+      const desc = fm[1].match(
+        /^description:\s*["']?([^"'\n]+)["']?\s*$/m,
+      )?.[1];
+      const date = fm[1].match(/^date:\s*["']?([^"'\n]+)["']?\s*$/m)?.[1];
       if (!slug) continue;
-      const entry = { slug: slug.trim(), title: (title ?? slug).trim() };
+      const entry = {
+        slug: slug.trim(),
+        title: (title ?? slug).trim(),
+        desc: desc?.trim() ?? "",
+        date: date?.trim() ?? "",
+      };
       index.set(entry.slug, entry);
       if (title) index.set(entry.title, entry);
     }
@@ -65,6 +74,15 @@ export function remarkWikiLink() {
             type: "link",
             url: `/blog/${entry.slug}`,
             children: [{ type: "text", value: label?.trim() ?? entry.title }],
+            // 目标元数据随链接输出，悬停预览卡（FootnotePreview.astro）读取
+            data: {
+              hProperties: {
+                className: ["wiki-link"],
+                "data-wl-title": entry.title,
+                "data-wl-desc": entry.desc,
+                "data-wl-date": entry.date,
+              },
+            },
           });
         } else {
           console.warn(

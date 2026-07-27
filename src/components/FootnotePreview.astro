@@ -1,7 +1,8 @@
 ---
-// 悬停/聚焦脚注标号（GFM 输出的 [data-footnote-ref]）时，
-// 就地浮出脚注内容，省去跳到文末再跳回来。
-// 触屏跳过（点按仍走原生锚点跳转）；浮窗挂在 body 上，换页随 body 消亡。
+// 悬停浮窗（共用一个 .footnote-pop）：
+//   [data-footnote-ref]  → 就地预览脚注内容，省去跳到文末再跳回来
+//   a.wiki-link          → 预览双链目标文章（标题/描述/日期，来自构建期数据属性）
+// 触屏跳过（点按仍走原生跳转）；浮窗挂在 body 上，换页随 body 消亡。
 ---
 
 <script>
@@ -20,7 +21,19 @@
     if (pop && pop.isConnected) pop.classList.remove("is-visible");
   }
 
-  function show(ref: HTMLAnchorElement) {
+  // 摆到锚点上方；顶部放不下就翻到下方
+  function place(el: HTMLElement, anchor: Element) {
+    const rect = anchor.getBoundingClientRect();
+    el.style.left = `${Math.max(16, Math.min(rect.left, window.innerWidth - el.offsetWidth - 16))}px`;
+    el.classList.add("is-visible");
+    const above = rect.top - el.offsetHeight - 10;
+    el.style.top =
+      above > 8
+        ? `${window.scrollY + above}px`
+        : `${window.scrollY + rect.bottom + 10}px`;
+  }
+
+  function showFootnote(ref: HTMLAnchorElement) {
     const hash = decodeURIComponent(new URL(ref.href).hash.slice(1));
     const note = document.getElementById(hash);
     if (!note) return;
@@ -32,33 +45,54 @@
       .querySelectorAll("[data-footnote-backref]")
       .forEach((backref) => backref.remove());
     el.innerHTML = clone.innerHTML;
+    place(el, ref);
+  }
 
-    // 先摆到锚点上方；顶部放不下就翻到下方
-    const rect = ref.getBoundingClientRect();
-    el.style.left = `${Math.max(16, Math.min(rect.left, window.innerWidth - el.offsetWidth - 16))}px`;
-    el.classList.add("is-visible");
-    const height = el.offsetHeight;
-    const above = rect.top - height - 10;
-    el.style.top =
-      above > 8
-        ? `${window.scrollY + above}px`
-        : `${window.scrollY + rect.bottom + 10}px`;
+  function showWikiLink(link: HTMLElement) {
+    const title = link.dataset.wlTitle;
+    if (!title) return;
+
+    // 全部走 textContent 拼装 —— 不给 frontmatter 文本任何注入面
+    const el = ensurePop();
+    el.innerHTML = "";
+    const titleEl = document.createElement("p");
+    titleEl.style.cssText =
+      "margin:0;font-family:var(--font-heading);letter-spacing:.04em;color:var(--accent);";
+    titleEl.textContent = title;
+    el.append(titleEl);
+    if (link.dataset.wlDesc) {
+      const desc = document.createElement("p");
+      desc.style.margin = "0.25rem 0 0";
+      desc.textContent = link.dataset.wlDesc;
+      el.append(desc);
+    }
+    if (link.dataset.wlDate) {
+      const date = document.createElement("p");
+      date.style.cssText =
+        "margin:0.3rem 0 0;font-family:var(--font-mono);font-size:.7rem;color:var(--foreground-secondary);";
+      date.textContent = link.dataset.wlDate;
+      el.append(date);
+    }
+    place(el, link);
   }
 
   // 触屏没有 hover，浮窗只做指针/键盘增强
   if (!window.matchMedia("(pointer: coarse)").matches) {
     for (const enter of ["mouseover", "focusin"] as const) {
       document.addEventListener(enter, (event) => {
-        const ref = (event.target as HTMLElement | null)?.closest?.(
-          "[data-footnote-ref]",
-        );
-        if (ref) show(ref as HTMLAnchorElement);
+        const target = event.target as HTMLElement | null;
+        const ref = target?.closest?.("[data-footnote-ref]");
+        if (ref) return showFootnote(ref as HTMLAnchorElement);
+        const wiki = target?.closest?.("a.wiki-link");
+        if (wiki) showWikiLink(wiki as HTMLElement);
       });
     }
     for (const leave of ["mouseout", "focusout"] as const) {
       document.addEventListener(leave, (event) => {
+        const target = event.target as HTMLElement | null;
         if (
-          (event.target as HTMLElement | null)?.closest?.("[data-footnote-ref]")
+          target?.closest?.("[data-footnote-ref]") ||
+          target?.closest?.("a.wiki-link")
         )
           hide();
       });

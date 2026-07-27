@@ -1,0 +1,96 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getChangelog } from "../data/changelog";
+import { site } from "../data/site";
+
+const entries = getChangelog();
+
+// 按天分组（已是时间倒序）
+const byDay = new Map<string, typeof entries>();
+for (const entry of entries) {
+  const day = entry.date.toISOString().slice(0, 10);
+  if (!byDay.has(day)) byDay.set(day, []);
+  byDay.get(day)!.push(entry);
+}
+
+// 类型徽章配色（沿用 callout 调色板）
+const typeColor: Record<string, string> = {
+  feat: "background-color: var(--accent); color: #fff;",
+  fix: "background-color: #f59e0b; color: #000;",
+  perf: "background-color: #10b981; color: #000;",
+  refactor: "background-color: #8b5cf6; color: #fff;",
+  test: "background-color: #3b82f6; color: #fff;",
+};
+const badgeStyle = (type: string) =>
+  typeColor[type] ??
+  "background-color: var(--surface-deep); color: var(--foreground-secondary); border: 1px solid var(--border);";
+---
+
+<BaseLayout
+  title="更新日志｜贤者工坊"
+  description="本站演进史 —— 由 git 提交历史生成"
+  author="SageChen"
+  url="https://blog.sagec.fun/changelog"
+>
+  <div class="mx-auto w-full max-w-3xl px-4 py-6">
+    <header class="blog-hero">
+      <h1 class="blog-hero-title font-heading">CHANGELOG</h1>
+      <p class="blog-hero-hand font-hand" aria-hidden="true">
+        本站演进史，共 {entries.length} 次提交
+      </p>
+    </header>
+
+    {
+      entries.length === 0 ? (
+        <div class="card landing-section mx-auto max-w-md p-8 text-center">
+          <p class="text-foreground-secondary m-0 text-sm">
+            构建环境读不到 git 历史（浅克隆），日志暂不可用。
+          </p>
+        </div>
+      ) : (
+        <div class="landing-section space-y-10">
+          {[...byDay.entries()].map(([day, items]) => (
+            <section>
+              <div class="mb-3 flex items-center gap-3">
+                <span
+                  class="bg-accent block h-5 w-1.5 -skew-x-12"
+                  aria-hidden="true"
+                />
+                <h2 class="text-foreground m-0 font-mono text-lg font-bold tracking-widest">
+                  {day}
+                </h2>
+                <span class="text-foreground-secondary font-mono text-xs">
+                  × {items.length}
+                </span>
+              </div>
+
+              <ul class="m-0 list-none space-y-2 p-0">
+                {items.map((entry) => (
+                  <li class="flex items-baseline gap-3">
+                    <span
+                      class="inline-block w-20 shrink-0 -skew-x-6 px-1.5 py-0.5 text-center font-mono text-[0.65rem] font-bold tracking-wider"
+                      style={badgeStyle(entry.type)}
+                    >
+                      {entry.type.toUpperCase()}
+                    </span>
+                    <span class="text-foreground min-w-0 flex-1 text-sm">
+                      {entry.subject}
+                    </span>
+                    <a
+                      href={`${site.repo}/commit/${entry.hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-foreground-secondary hover:text-accent shrink-0 font-mono text-xs transition-colors"
+                    >
+                      {entry.hash}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</BaseLayout>

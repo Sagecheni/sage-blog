@@ -90,6 +90,7 @@ test("新页面都能渲染", async ({ page }) => {
     ["/series", "SERIES"],
     ["/footprints", "FOOTPRINTS"],
     ["/friends", "FRIENDS"],
+    ["/changelog", "CHANGELOG"],
   ] as const) {
     await page.goto(path);
     await expect(page.locator("h1").first()).toContainText(text);
