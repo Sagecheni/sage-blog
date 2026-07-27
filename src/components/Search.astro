@@ -230,6 +230,25 @@
       setOpen(false);
       return;
     }
+    // 焦点圈禁：弹层开着时 Tab 只在内部循环，不逃到背景页面
+    if (event.key === "Tab" && isOpen()) {
+      const overlay = getOverlay()!;
+      const focusables = [
+        ...overlay.querySelectorAll<HTMLElement>("input, button, a[href]"),
+      ].filter((el) => el.offsetParent !== null);
+      if (!focusables.length) return;
+      const current = focusables.indexOf(document.activeElement as HTMLElement);
+      event.preventDefault();
+      const next = event.shiftKey
+        ? current <= 0
+          ? focusables.length - 1
+          : current - 1
+        : current === focusables.length - 1 || current === -1
+          ? 0
+          : current + 1;
+      focusables[next].focus();
+      return;
+    }
     // 斜杠唤起：焦点在输入类控件里时不劫持
     const target = event.target as HTMLElement | null;
     const typing =

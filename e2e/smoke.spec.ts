@@ -55,6 +55,33 @@ test("搜索：Cmd+K 打开并能命中中文", async ({ page }) => {
   await expect(input).toBeFocused();
   await input.fill("注意力");
   await expect(page.locator(".search-hit").first()).toBeVisible();
+  // 标签过滤胶囊已填充
+  await expect(page.locator("#search-filters .blog-tag").first()).toBeVisible();
+});
+
+test("客户端导航链路：零 console 错误 + 主题跨页持久", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("console", (msg) => {
+    if (msg.type() === "error") errors.push(msg.text());
+  });
+  page.on("pageerror", (err) => errors.push(String(err)));
+
+  await page.goto("/");
+  // 切到 light 主题
+  await page.getByRole("button", { name: /Activate/ }).click();
+  await expect(page.locator("html")).toHaveClass(/light/);
+
+  // ClientRouter 换页（非整页刷新），主题类必须在 after-swap 补回
+  await page.click('nav a[href="/blog"]');
+  await expect(page.locator("h1.blog-hero-title")).toBeVisible();
+  await expect(page.locator("html")).toHaveClass(/light/);
+
+  await page.locator(".blog-post-item a").first().click();
+  // 文章页独有的标题类（列表页的卡片也是 <article>，不能用元素选择器）
+  await expect(page.locator("h1.blog-title")).toBeVisible();
+  await expect(page.locator("html")).toHaveClass(/light/);
+
+  expect(errors).toEqual([]);
 });
 
 test("新页面都能渲染", async ({ page }) => {
