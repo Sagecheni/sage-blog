@@ -20,6 +20,7 @@ import { rehypeCitationFrontmatter } from "./src/plugins/rehype-citation-frontma
 import mdx from "@astrojs/mdx";
 
 import expressiveCode from "astro-expressive-code";
+import { asyncCjkCss } from "./src/integrations/async-cjk-css.mjs";
 
 // https://astro.build/config
 export default defineConfig({
@@ -35,6 +36,8 @@ export default defineConfig({
     sitemap({ serialize: sitemapLastmodSerializer() }),
     expressiveCode(),
     mdx(),
+    // CJK 字体 CSS 改异步，避免 350KB @font-face 目录阻塞首屏
+    asyncCjkCss(),
   ],
 
   image: {

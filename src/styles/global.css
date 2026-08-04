@@ -5,9 +5,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* FONTS */
-/* FONTS */
-/* Fonts are loaded via BaseLayout.astro using @fontsource packages */
+/* FONTS
+ * Latin（Space Grotesk / Bangers / IBM Plex Mono）→ BaseLayout 同步 import，进关键 CSS
+ * CJK（LXGW 文楷 / ZCOOL 站酷）→ fonts-cjk.css，BaseLayout 里动态 import，不阻塞首屏
+ */
 
 /* COLOR SCHEME */
 /* P5R THEME COLORS */
@@ -90,10 +91,17 @@
 
   --ease-pop: var(--ease-pop);
 
-  --font-sans: "Space Grotesk Variable", "LXGW WenKai GB Screen";
-  --font-mono: "IBM Plex Mono";
-  --font-heading: "Bangers", "ZCOOL QingKe HuangYou", cursive;
-  --font-display: "Bangers", "ZCOOL QingKe HuangYou", cursive;
+  /* 中文 webfont 异步到达前，先用系统字体保证可读（避免空白/回落 Arial） */
+  --font-sans:
+    "Space Grotesk Variable", "LXGW WenKai GB Screen", "PingFang SC",
+    "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-heading:
+    "Bangers", "ZCOOL QingKe HuangYou", "PingFang SC", "Microsoft YaHei",
+    cursive;
+  --font-display:
+    "Bangers", "ZCOOL QingKe HuangYou", "PingFang SC", "Microsoft YaHei",
+    cursive;
   --font-hand:
     "Bradley Hand", "Bradley Hand ITC", "Chalkboard SE", "Comic Sans MS",
     cursive;

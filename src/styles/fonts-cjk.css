@@ -1,0 +1,9 @@
+/*
+ * CJK webfonts — loaded asynchronously from BaseLayout.
+ * Keep these OUT of the render-blocking bundle:
+ *   - LXGW WenKai GB Screen: ~250 unicode-range slices (cn-font-split)
+ *   - ZCOOL QingKe HuangYou: unicode-range slices (fontsource 400.css)
+ * Browser only downloads the slices that match page glyphs.
+ */
+@import "lxgw-wenkai-screen-web/lxgwwenkaigbscreen/result.css";
+@import "@fontsource/zcool-qingke-huangyou/400.css";
