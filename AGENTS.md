@@ -18,6 +18,12 @@ npm run preview
 
 # Run Astro CLI directly
 npm run astro
+
+# Typora 本地图 → 广州 COS 上传并回写 MD（需 .env 里 COS 密钥）
+npm run sync-images
+npm run sync-images:check
+# 按 MD 引用清理 COS 孤儿 / 删除指定图（默认 dry-run，--apply 才删）
+npm run gc-images
 ```
 
 **Note**: No test suite is currently configured. No `npm test` script exists.

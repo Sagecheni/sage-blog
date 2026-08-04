@@ -262,33 +262,53 @@ graph TD;
 
 ### 6.1 发图工作流（照片 → 上线）
 
-从相册到文章上线只有两步手动操作，其余由构建自动完成。
+主路径按 **Typora 粘贴** 设计：写作期用本地相对路径，发布前一键上传到广州 COS 并回写链接。
 
-**第 ① 步 · 清洗照片**（上传前必做，就地重写）：
+**第 ① 步 · Typora 里正常写**
 
-```bash
-node scripts/strip-exif.mjs ~/Desktop/游记照片 --max 4000
-```
-
-- 按 EXIF 方向摆正像素（否则竖拍照片会横过来）
-- 剥离全部元数据（EXIF / GPS / XMP / IPTC）
-- `--max 4000` 顺带把最长边压到 4000px，可省略
-
-**第 ② 步 · 传 COS，写 Markdown**：
-
-把清洗后的照片上传到已授权的 bucket（见 6.5），然后正常引用：
+把图片粘贴进 Markdown。Typora 会把图复制到文稿同目录（或 `xxx.assets/`），正文里是相对路径：
 
 ```markdown
 :::gallery
-![神社门口](https://sageblog-1316665129.cos.ap-guangzhou.myqcloud.com/img/001.jpg)
+![神社门口](./japan-day1.assets/001.jpg)
 
-![午饭的拉面](https://.../002.jpg)
+![午饭的拉面](./japan-day1.assets/002.jpg)
 
 中间想插一句解说也行，文字自动横跨整行。
 :::
 ```
 
-不想要画廊就裸写 `![图注](url)` —— 单图大图，自动编号图注。本地相对路径图片同样支持并会被优化，但主流程推荐 COS。
+不想要画廊就裸写 `![图注](./photo.jpg)`。`src/assets/` 下的站点静态图（本 guide 示例）不会被上传脚本碰。
+
+**第 ② 步 · 同步到 COS（上传 + 回写 URL）**
+
+文稿写完后、`build` / `push` 之前跑：
+
+```bash
+# 先在项目根目录配置 .env（见 .env.example）
+# COS_SECRET_ID / COS_SECRET_KEY
+
+npm run sync-images                 # 处理 src/blog 下全部文章
+npm run sync-images -- src/blog/某篇.md
+npm run sync-images -- --dry-run    # 只预览，不上传不改文件
+npm run sync-images -- --delete-local  # 上传成功后删除本地图
+npm run sync-images:check           # 若仍有本地图引用则失败（可挂 pre-commit）
+```
+
+脚本会依次：
+
+1. 扫描 MD 里的**本地**图片引用（已是 `https://` 的跳过）
+2. 按 EXIF 方向摆正、剥离元数据，默认最长边压到 4000px
+3. 上传到广州 bucket `sageblog-1316665129`（key：`img/<文章名>/<文件名>`）
+4. **就地改写 MD** 为 COS URL，例如：
+
+```markdown
+![神社门口](https://sageblog-1316665129.cos.ap-guangzhou.myqcloud.com/img/某篇/001.jpg)
+```
+
+然后 `git diff` 看一眼再 commit。**不要把未上传的本地大图推进仓库**（可先 sync 再提交；或对 `*.assets/` 自行 gitignore）。
+
+仍可手动：`node scripts/strip-exif.mjs <目录> --max 4000` 只清洗、不上传。
 
 **构建自动做的**（`npm run build`）：
 
@@ -297,6 +317,24 @@ node scripts/strip-exif.mjs ~/Desktop/游记照片 --max 4000
 - 优化副本自动剥离 EXIF；授权域的原图 URL 不出现在页面任何地方
 
 **访客侧**：所有图片（含点击放大）都从 Pages 加载优化副本，COS 零访客流量，仅作图片仓库。
+
+**删图**（以 git 里的 Markdown 引用为唯一真相，无需图床 UI）：
+
+```bash
+# 改文时先从 MD 去掉 ![](...)，再删远端：
+npm run gc-images -- --delete 'https://sageblog-....com/img/某篇/001.jpg'
+npm run gc-images -- --apply --delete 'https://sageblog-....com/img/某篇/001.jpg'
+
+# 定期清「COS 有、全站 MD 都没引用」的孤儿（默认只预览）：
+npm run gc-images
+npm run gc-images -- --apply
+
+# 整篇废弃：只扫某个 key 前缀
+npm run gc-images -- --prefix img/某篇/
+npm run gc-images -- --apply --prefix img/某篇/
+```
+
+仍被文章引用的对象默认拒删，需 `--force`（会留下文章裂图，慎用）。
 
 ### 6.2 网格（默认）
 
@@ -365,7 +403,7 @@ node scripts/strip-exif.mjs ~/Desktop/游记照片 --max 4000
 :::warning
 **COS 域名要授权**：远程图片只有域名列在 `src/data/image-domains.mjs` 里才会被构建期优化（转 webp、补尺寸、生成 srcset）并隐藏原图链接；换或新增 bucket 必须同步该文件，否则该域图片会静默回退为未优化直连。
 
-**EXIF 隐私边界**：站点上出现的全部是剥离过 EXIF 的优化副本，原图 URL 不会出现在页面上；但**原图本身仍在 COS 上公有可读**，知道 URL 就能拿到含 GPS 的元数据 —— 所以 6.1 的清洗一步不可省。
+**EXIF 隐私边界**：站点上出现的全部是剥离过 EXIF 的优化副本，原图 URL 不会出现在页面上；但**原图本身仍在 COS 上公有可读**，知道 URL 就能拿到含 GPS 的元数据。`npm run sync-images` 上传前会自动清洗；若改走控制台/PicGo 手传，仍须先跑 `scripts/strip-exif.mjs`。
 :::
 
 ## 7. 系列连载 (Series)
@@ -472,7 +510,7 @@ for batch in loader:
     loss.backward()
 ```
 
-### 8.5 双链（[[...]]）
+### 8.5 双链（`[[slug]]`）
 
 Obsidian 风格的文章互链，按 **slug 或标题**解析：
 
@@ -561,7 +599,7 @@ location: { place: 杭州, lat: 30.2741, lng: 120.1551 }
 | `remark-gfm`       | 脚注、表格、任务列表   | 通用写作增强           |
 | `rehype-citation`  | 参考文献               | 研究型、技术深究型文章 |
 | `remark-directive` | Callouts、画廊、时间线 | 提示、警告、多图排版   |
-| `remark-wiki-link` | [[双链]] 与反向链接    | 文章互引、知识网络     |
+| `remark-wiki-link` | 双链 `[[slug]]` 与反向链接 | 文章互引、知识网络     |
 | `mermaid`          | 流程图                 | 架构设计、逻辑梳理     |
 | `series` 字段      | 连载导航               | 游记、专题系列         |
 

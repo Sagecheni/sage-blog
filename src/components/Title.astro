@@ -22,13 +22,7 @@ const formatDate = (date: Date) =>
     <span class="bg-foreground block h-1.5 w-4 -skew-x-12"></span>
   </div>
 
-  {
-    /* transition:name 与列表页/首页的标题同名 —— ClientRouter 换页时标题平滑морph到位 */
-  }
-  <h1
-    class="blog-title font-heading text-foreground"
-    transition:name={`post-title-${frontmatter.slug}`}
-  >
+  <h1 class="blog-title font-heading text-foreground">
     {frontmatter.title}
   </h1>
 
