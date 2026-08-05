@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sage-blog",
+  // 与首次部署日对齐；之后可按需更新
+  "compatibility_date": "2026-08-05",
+  "preview_urls": true,
+  "assets": {
+    // Astro 构建产物（含 pagefind 索引与 public/_headers）
+    "directory": "./dist",
+    // 显式开启：未命中路径回退 404.html（Pages 会自动猜，Workers 必须手写）
+    "not_found_handling": "404-page"
+  }
+}
